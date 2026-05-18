@@ -1220,4 +1220,1571 @@ mindmap
                     <div style="display:flex;gap:8px;margin-top:10px;">
                         <button class="ui-btn ui-btn-secondary">Test</button>
                         <button class="ui-btn ui-btn-primary">Save &amp; restart service →</button>
-    
+                    </div>
+                </div>
+
+                <div class="ui-card" style="background:#f0f7ff;border-color:#bfdbfe;">
+                    <div class="ui-card-title"><span>What happens on the next service start</span><span class="ui-badge info">automatic</span></div>
+                    <div class="ui-row"><span class="label">Application reconciliation</span><span class="val">Creates <code>speed2lead</code> in Infobip if missing</span></div>
+                    <div class="ui-row"><span class="label">Entity reconciliation</span><span class="val">Creates one Entity per existing Hermes customer that doesn't have one yet</span></div>
+                    <div class="ui-row"><span class="label">Ongoing</span><span class="val">Every new customer created afterwards gets its Entity inline</span></div>
+                    <p style="font-size:11.5px;color:#6b7280;margin:8px 0 0;">Both reconcilers are idempotent and run on every boot — no operator step required.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3>16.3 Per-customer detail — drilling into one customer</h3>
+    <p style="font-size:12.5px;color:#6b7280;">Each row in <b>Phone Numbers</b> is now a single MSISDN; the channels it serves and the provider per channel are shown as expandable bindings (§15.3). State is owned by Hermes (§15.1).</p>
+    <div class="ui-frame">
+        <div class="ui-topbar">
+            <div class="brand">Hermes360 · Admin · Customer · Acme Corp</div>
+            <div class="user">ops@deployer.com</div>
+        </div>
+        <div class="ui-body">
+            <div class="ui-sidebar">
+                <div class="ui-nav-item">⚙ Integration</div>
+                <div class="ui-nav-item">🔌 Providers</div>
+                <div class="ui-nav-item active">👥 Customers</div>
+                <div class="ui-nav-item">📞 Numbers</div>
+                <div class="ui-nav-item">💬 Templates</div>
+                <div class="ui-nav-item">🔔 Webhooks</div>
+            </div>
+            <div class="ui-content">
+                <div class="ui-h">Acme Corp</div>
+                <div class="ui-sub">Hermes Customer #1042 · Created 2025-08-14</div>
+
+                <div class="ui-card">
+                    <div class="ui-card-title"><span>Provider Entity binding</span><span class="ui-badge ok">provisioned · infobip</span></div>
+                    <div class="ui-row"><span class="label">Provider</span><span class="val">infobip</span></div>
+                    <div class="ui-row"><span class="label">entityId</span><span class="val">cust-1042</span></div>
+                    <div class="ui-row"><span class="label">entityName</span><span class="val">Acme Corp</span></div>
+                    <div class="ui-row"><span class="label">Provisioned at</span><span class="val">2026-05-11 14:30 UTC</span></div>
+                    <div class="ui-row"><span class="label">Last sync</span><span class="val">2 h ago · OK (by Infobip Worker)</span></div>
+                    <div style="margin-top:10px;display:flex;gap:8px;">
+                        <button class="ui-btn ui-btn-secondary">Force re-sync</button>
+                        <button class="ui-btn ui-btn-secondary">View provisioning history</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <p class="ui-chip-row" style="margin-top:6px;color:#6b7280;font-size:11.5px;">Senders &amp; per-channel bindings for this customer are managed in <b>§17 — Parameters → Messaging Providers</b>.</p>
+
+    <h3>16.4 Providers dashboard — worker health at a glance</h3>
+    <p style="font-size:12.5px;color:#6b7280;">One row per registered provider; each provider has an independent worker with its own <code>/health</code> endpoint (§15.2). Workers keep number / binding statuses fresh on their own, independent of any send traffic.</p>
+    <div class="ui-frame">
+        <div class="ui-topbar">
+            <div class="brand">Hermes360 · Admin · Providers</div>
+            <div class="user">ops@deployer.com</div>
+        </div>
+        <div class="ui-body">
+            <div class="ui-sidebar">
+                <div class="ui-nav-item">⚙ Integration</div>
+                <div class="ui-nav-item active">🔌 Providers</div>
+                <div class="ui-nav-item">👥 Customers</div>
+                <div class="ui-nav-item">📞 Numbers</div>
+                <div class="ui-nav-item">💬 Templates</div>
+                <div class="ui-nav-item">🔔 Webhooks</div>
+            </div>
+            <div class="ui-content">
+                <div class="ui-h">Providers &amp; Workers</div>
+                <div class="ui-sub">Each provider is a plug-in implementing <code>IMessagingProvider</code>. Workers run independently from the send path.</div>
+
+                <div class="ui-stats">
+                    <div class="ui-stat ok"><div class="num">2</div><div class="lbl">Workers alive</div></div>
+                    <div class="ui-stat warn"><div class="num">1</div><div class="lbl">Degraded</div></div>
+                    <div class="ui-stat err"><div class="num">0</div><div class="lbl">Down</div></div>
+                    <div class="ui-stat"><div class="num">2 487</div><div class="lbl">Sync ops · 24 h</div></div>
+                </div>
+
+                <div class="ui-card">
+                    <div class="ui-card-title"><span><span class="ui-led green"></span>Infobip Worker</span><span class="ui-badge ok">alive</span></div>
+                    <div class="ui-row"><span class="label">Base URL</span><span class="val">xr5e2e.api.infobip.com</span></div>
+                    <div class="ui-row"><span class="label">/health</span><span class="val">200 OK · 30 s ago</span></div>
+                    <div class="ui-row"><span class="label">Channels served</span><span class="val">WhatsApp · SMS · RCS · Voice</span></div>
+                    <div class="ui-row"><span class="label">Bindings managed</span><span class="val">412</span></div>
+                    <div class="ui-row"><span class="label">Last sync cycle</span><span class="val">2 min ago · 412 bindings checked · 3 status changes</span></div>
+                    <div style="margin-top:10px;display:flex;gap:8px;">
+                        <button class="ui-btn ui-btn-secondary">Restart worker</button>
+                        <button class="ui-btn ui-btn-secondary">Force full sync</button>
+                        <button class="ui-btn ui-btn-secondary">View logs</button>
+                    </div>
+                </div>
+
+                <div class="ui-card">
+                    <div class="ui-card-title"><span><span class="ui-led amber"></span>Twilio Worker</span><span class="ui-badge warn">degraded</span></div>
+                    <div class="ui-row"><span class="label">Base URL</span><span class="val">api.twilio.com</span></div>
+                    <div class="ui-row"><span class="label">/health</span><span class="val">502 Bad Gateway · 1 m ago (1/3 retries)</span></div>
+                    <div class="ui-row"><span class="label">Channels served</span><span class="val">SMS</span></div>
+                    <div class="ui-row"><span class="label">Bindings managed</span><span class="val">58</span></div>
+                    <div class="ui-row"><span class="label">Last sync cycle</span><span class="val">5 min ago · partial (provider 5xx)</span></div>
+                    <div style="margin-top:10px;display:flex;gap:8px;">
+                        <button class="ui-btn ui-btn-secondary">Restart worker</button>
+                        <button class="ui-btn ui-btn-secondary">Force full sync</button>
+                        <button class="ui-btn ui-btn-secondary">View logs</button>
+                    </div>
+                </div>
+
+                <div class="ui-card" style="border-style:dashed;background:#fafafa;">
+                    <div class="ui-card-title"><span>+ Add a new provider</span></div>
+                    <p style="font-size:12px;color:#6b7280;margin:0;">Drop in a new <code>IMessagingProvider</code> implementation and configure its connection here. No code change in the send path.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h2>17. Admin → Parameters → <i>Messaging Providers</i> page</h2>
+    <p style="font-size:13.5px;">A new admin-panel page lives under <b>Parameters → Messaging Providers</b> (plural). The workflow is intentionally split in <b>two stages</b>: first the ops user creates a <b>sender</b> (just a name + a number) and saves it as a row in the list; then they <b>drill down into that row</b> to attach one or more <b>channel bindings</b>. Each binding is added via an "Add binding" button that opens a <b>popup</b> where the operator picks the channel, picks the provider (auto-resolved if only one is eligible), and fills the provider-specific enrolment form. A single sender row can accumulate many bindings, each with its own status.</p>
+
+    <h3>17.1 Two-stage flow — sender first, bindings inside it</h3>
+    <div class="mermaid">
+        flowchart LR
+        subgraph A["Stage 1 · Create sender"]
+        A1["Name (free text)<br />e.g. 'Acme Support'"] --> A2["Number (free text)<br />+33123456789 or<br />alphanumeric ID"]
+        A2 --> A3["Save"]
+        A3 --> A4["Row appears in list<br />(no bindings yet)"]
+        end
+        subgraph B["Stage 2 · Drill-down → Add bindings"]
+        B1["Expand sender row"] --> B2["Click '+ Add binding'"]
+        B2 --> B3["Popup opens"]
+        B3 --> B4["Pick channel<br />(WhatsApp · SMS · RCS · Voice)"]
+        B4 --> B5{"Eligible providers<br />for this channel?"}
+        B5 -->|exactly 1| B6["Provider auto-selected<br />(dropdown hidden)"]
+        B5 -->|2+| B7["Pick provider<br />(dropdown)"]
+        B6 --> B8["Provider-specific form<br />renders in popup"]
+        B7 --> B8
+        B8 --> B9["Submit · creates 1 binding row<br />under the sender · state = requested"]
+        end
+        A4 --> B1
+        style A1 fill:#e3f2fd
+        style A2 fill:#e3f2fd
+        style A4 fill:#fff3e0
+        style B5 fill:#fce4ec,stroke:#e2336b,stroke-width:2px
+        style B8 fill:#e8f5e9
+        style B9 fill:#f3e5f5
+    </div>
+
+    <h3>17.2 Field-by-field behaviour</h3>
+    <table>
+        <thead><tr><th>Stage</th><th>Field</th><th>Type</th><th>Source / behaviour</th></tr></thead>
+        <tbody>
+            <tr><td rowspan="2"><b>1 · Create sender</b><br />(inline row in the list)</td><td><b>Name</b></td><td>String</td><td>Human-readable label for the sender, shown wherever the sender is referenced in reports and admin views. Free text.</td></tr>
+            <tr><td><b>Number</b></td><td>String</td><td>MSISDN in E.164 form (most channels) or an alphanumeric Sender ID where the channel allows. Persisted as-is; channel-specific validation happens at <b>binding time</b>, not here — because the same string may be valid for SMS but not for WhatsApp.</td></tr>
+            <tr><td rowspan="3"><b>2 · Add binding</b><br />(popup, opened from the row's drill-down)</td><td><b>Channel</b></td><td>Dropdown</td><td><code>WhatsApp · SMS · RCS · Voice</code> — drives provider filtering &amp; the provider-specific form below.</td></tr>
+            <tr><td><b>Provider</b></td><td>Conditional dropdown</td><td>Populated from the provider registry, <b>filtered to providers that declare support for the chosen channel</b>. <b>If exactly one provider matches, the dropdown is hidden and that provider is auto-selected</b> — no extra click for the common case (e.g. WhatsApp via Infobip only).</td></tr>
+            <tr><td><b>Provider-specific form</b></td><td>Dynamic panel inside the popup</td><td>Rendered by the chosen provider's plugin. For <b>Infobip · WhatsApp</b>: the popup launches <b>Meta's Embedded Signup widget</b> (Meta's Facebook JS SDK, hosted by Hermes as a Tech Provider). The widget collects all Meta-side details directly from the tenant's Facebook Business Manager — legal name, display name, category, business profile, etc. — so Hermes does <i>not</i> render those fields itself. On ES completion, Hermes captures <code>wabaId</code> + <code>phoneNumberId</code> from the ES callback and forwards them to Infobip via <code>POST /whatsapp/1/embedded-signup/registrations/share-waba</code>. Each provider+channel pair owns its own form schema (or, as here, its own embedded flow); no provider-specific code leaks into the host page.</td></tr>
+        </tbody>
+    </table>
+
+    <div class="note"><b>Why split sender from bindings?</b> A sender is a stable, channel-agnostic identity (name + number). Bindings are channel-specific enrolments that come and go independently: WhatsApp may take days for Meta approval while SMS goes live in minutes, and a sender may later add RCS without re-typing its identity. Keeping creation cheap (just name + number) and pushing the heavy provider-specific form into a per-binding popup matches that lifecycle.</div>
+
+    <h3>17.3 Many channels per number — bindings stack on the same MSISDN</h3>
+    <p style="font-size:13.5px;">A sender (MSISDN) is <b>not</b> single-channel. The same number can be enrolled on WhatsApp, SMS, RCS and Voice independently — each enrolment is a separate <code>number_channel_binding</code> row (§15.3), with its own provider, its own state machine, and its own approval timeline (Meta verification for WhatsApp, near-immediate for SMS, etc.). The page surfaces this as a <b>bindings panel</b> under the sender: one row per (channel × provider), with a status badge that the per-provider worker keeps fresh.</p>
+
+    <div class="mermaid">
+        flowchart LR
+        N["Sender<br />+33123456789"] --> B1["WhatsApp · infobip<br /><b>active</b>"]
+        N --> B2["SMS · infobip<br /><b>active</b>"]
+        N --> B3["RCS · infobip<br /><b>pending</b>"]
+        N --> B4["Voice · infobip<br /><b>requested</b>"]
+        B1 -. status .- W["Infobip Worker<br />polls Resource Mgmt<br />updates each binding"]
+        B2 -. status .- W
+        B3 -. status .- W
+        B4 -. status .- W
+        style N fill:#e3f2fd
+        style B1 fill:#d1fae5
+        style B2 fill:#d1fae5
+        style B3 fill:#fef3c7
+        style B4 fill:#dbeafe
+        style W fill:#fce4ec
+    </div>
+
+    <h3>17.4 Per-channel status semantics</h3>
+    <table>
+        <thead><tr><th>Status</th><th>Meaning</th><th>Typical owner of next transition</th></tr></thead>
+        <tbody>
+            <tr><td><span class="ui-badge info">requested</span></td><td>Hermes has created the binding row; Embedded Signup not yet launched (WhatsApp), or sender registration not yet submitted (SMS).</td><td>Ops user (launches ES) / Hermes worker</td></tr>
+            <tr><td><span class="ui-badge info">procuring</span></td><td>WhatsApp: ES launched, awaiting Meta confirmation. SMS: sender registration submitted, awaiting provider ack.</td><td>Meta / Infobip / provider</td></tr>
+            <tr><td><span class="ui-badge warn">pending_registration</span></td><td>Webhook <code>IN_PROGRESS</code> received (WhatsApp ES) or provider-side onboarding in progress (e.g. SMS sender registration).</td><td>Infobip / provider (next webhook event)</td></tr>
+            <tr><td><span class="ui-badge warn">pending_meta_approval</span></td><td>WhatsApp-only — Meta is reviewing the business profile.</td><td>Meta (minutes → days)</td></tr>
+            <tr><td><span class="ui-badge ok">active</span></td><td>Binding is live and usable on this (number × channel).</td><td>—</td></tr>
+            <tr><td><span class="ui-badge err">rejected</span></td><td>Meta or provider refused the enrolment. Terminal until re-requested with new data.</td><td>Ops user (edit + retry)</td></tr>
+            <tr><td><span class="ui-badge err">suspended</span></td><td>Was active; provider has paused it (policy/quality/billing).</td><td>Provider event → worker updates</td></tr>
+            <tr><td><span class="ui-badge">decommissioned</span></td><td>Explicitly removed. Terminal.</td><td>—</td></tr>
+        </tbody>
+    </table>
+    <p style="font-size:12.5px;color:#6b7280;">Each binding owns its own status — a WhatsApp binding stuck in <code>pending_meta_approval</code> does not block the same number's SMS binding from being <code>active</code>.</p>
+
+    <h3>17.5 UI design — <i>Messaging Providers</i> page mock</h3>
+    <p style="font-size:13.5px;">Two stages on one page. The main view is a <b>list of senders</b>, each row expandable into its bindings. Adding a sender is an <b>inline row at the top</b> of the list (Name + Number + Save). Adding a binding is a <b>popup</b> triggered from inside an expanded sender row, carrying the channel dropdown, the conditional provider dropdown, and the provider-specific enrolment form. See <b>§16.4</b> for the related Providers / workers dashboard mock.</p>
+
+
+    <style>
+        .ui-expand-row td {
+            background: #f8fafc !important;
+            padding: 0 !important;
+        }
+
+        .ui-expand-inner {
+            padding: 12px 18px 14px;
+            border-left: 3px solid #e2336b;
+            background: #f8fafc;
+        }
+
+        .ui-modal-backdrop {
+            position: relative;
+            background: rgba(15, 23, 42, 0.45);
+            padding: 24px;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .ui-modal {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            max-width: 560px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .ui-modal-head {
+            background: #1e293b;
+            color: #fff;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .ui-modal-body {
+            padding: 16px 18px;
+        }
+
+        .ui-modal-foot {
+            padding: 10px 18px 14px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .ui-chip-row {
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .ui-caret {
+            display: inline-block;
+            width: 14px;
+            color: #94a3b8;
+        }
+    </style>
+
+    <div class="ui-frame">
+        <div class="ui-topbar">
+            <div class="brand">Hermes360 · Admin · Parameters · Messaging Providers</div>
+            <div class="user">ops@deployer.com</div>
+        </div>
+        <div class="ui-body">
+            <div class="ui-sidebar">
+                <div class="ui-nav-item">⚙ Integration</div>
+                <div class="ui-nav-item">🔌 Providers</div>
+                <div class="ui-nav-item">👥 Customers</div>
+                <div class="ui-nav-item">📞 Numbers</div>
+                <div class="ui-nav-item">💬 Templates</div>
+                <div class="ui-nav-item">🔔 Webhooks</div>
+                <div style="padding:14px 18px 6px;font-size:10.5px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.6px;">Parameters</div>
+                <div class="ui-nav-item active">📨 Messaging Providers</div>
+                <div class="ui-nav-item">🌐 Localization</div>
+                <div class="ui-nav-item">🔐 Security</div>
+            </div>
+            <div class="ui-content">
+                <div class="ui-h">Messaging Providers</div>
+                <div class="ui-sub">Stage 1 · create a sender (name + number). Stage 2 · expand the row and click <b>+ Add binding</b> to attach channels.</div>
+
+                <div class="ui-card">
+                    <div class="ui-card-title">
+                        <span>Senders <span class="ui-badge info">3 senders · 5 bindings</span></span>
+                        <button class="ui-btn ui-btn-primary">+ New sender</button>
+                    </div>
+
+                    <table class="ui-table">
+                        <thead>
+                            <tr><th style="width:24px;"></th><th>Name</th><th>Number</th><th>Bindings</th><th>Created</th><th></th></tr>
+                        </thead>
+                        <tbody>
+
+                            <!-- Inline create-sender row -->
+                            <tr style="background:#fff8e1;">
+                                <td><span class="ui-caret">＋</span></td>
+                                <td><input class="ui-input" placeholder="Sender name (e.g. Acme Support)" style="padding:5px 8px;font-size:12px;" /></td>
+                                <td><input class="ui-input" placeholder="+33123456789 or AcmeSupport" style="padding:5px 8px;font-size:12px;" /></td>
+                                <td colspan="2" style="font-size:11.5px;color:#6b7280;">No bindings yet — added after Save via the drill-down.</td>
+                                <td><button class="ui-btn ui-btn-primary">Save sender</button></td>
+                            </tr>
+
+                            <!-- Sender 1 collapsed -->
+                            <tr>
+                                <td><span class="ui-caret">▸</span></td>
+                                <td><b>Acme Support</b></td>
+                                <td><code>+33123456789</code></td>
+                                <td>
+                                    <span class="ui-badge ok">WhatsApp · active</span>
+                                    <span class="ui-badge ok">SMS · active</span>
+                                </td>
+                                <td>2026-05-12</td>
+                                <td><button class="ui-btn ui-btn-secondary">Rename</button></td>
+                            </tr>
+
+                            <!-- Sender 2 expanded with drill-down -->
+                            <tr>
+                                <td><span class="ui-caret">▾</span></td>
+                                <td><b>Globex Notifications</b></td>
+                                <td><code>+33987654321</code></td>
+                                <td>
+                                    <span class="ui-badge warn">WhatsApp · pending</span>
+                                    <span class="ui-badge info">RCS · requested</span>
+                                </td>
+                                <td>2026-05-13</td>
+                                <td><button class="ui-btn ui-btn-secondary">Rename</button></td>
+                            </tr>
+                            <tr class="ui-expand-row">
+                                <td colspan="6">
+                                    <div class="ui-expand-inner">
+                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                            <b style="font-size:12.5px;color:#1e293b;">Channel bindings for Globex Notifications</b>
+                                            <button class="ui-btn ui-btn-primary">+ Add binding</button>
+                                        </div>
+                                        <table class="ui-table" style="background:#fff;">
+                                            <thead><tr><th>Channel</th><th>Provider</th><th>State</th><th>Last sync</th><th></th></tr></thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>WhatsApp</td>
+                                                    <td>infobip</td>
+                                                    <td><span class="ui-badge warn">pending_meta_approval</span></td>
+                                                    <td>just now</td>
+                                                    <td><button class="ui-btn ui-btn-secondary">View</button> <button class="ui-btn ui-btn-secondary">Remove</button></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>RCS</td>
+                                                    <td>infobip</td>
+                                                    <td><span class="ui-badge info">requested</span></td>
+                                                    <td>5 m ago</td>
+                                                    <td><button class="ui-btn ui-btn-secondary">View</button> <button class="ui-btn ui-btn-secondary">Remove</button></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <p class="ui-chip-row" style="margin-top:6px;">Each row is one <code>number_channel_binding</code>. Status is updated by the corresponding provider's worker — independent per binding.</p>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Sender 3 collapsed -->
+                            <tr>
+                                <td><span class="ui-caret">▸</span></td>
+                                <td><b>AcmeSMS</b></td>
+                                <td><code>AcmeSupport</code> <span class="ui-chip-row">(alphanumeric)</span></td>
+                                <td><span class="ui-badge ok">SMS · active</span></td>
+                                <td>2026-05-14</td>
+                                <td><button class="ui-btn ui-btn-secondary">Rename</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="ui-chip-row" style="margin-top:8px;">Senders are channel-agnostic. Bindings are added <b>after</b> the sender exists, one popup at a time, and accumulate underneath.</p>
+                </div>
+
+                <!-- Popup overlay shown over the page (illustrative) -->
+                <div class="ui-modal-backdrop">
+                    <div class="ui-modal">
+                        <div class="ui-modal-head">
+                            <span>Add binding · Globex Notifications &nbsp;<span style="font-weight:400;opacity:.75;font-size:11.5px;">+33987654321</span></span>
+                            <span style="cursor:pointer;opacity:.7;">✕</span>
+                        </div>
+                        <div class="ui-modal-body">
+                            <!-- Channel -->
+                            <div class="ui-field">
+                                <label>Channel</label>
+                                <select class="ui-input">
+                                    <option>WhatsApp</option>
+                                    <option>SMS</option>
+                                    <option>RCS</option>
+                                    <option>Voice</option>
+                                </select>
+                            </div>
+
+                            <!-- Provider — auto-selected case (only one eligible) -->
+                            <div class="ui-field">
+                                <label>Provider <span class="ui-badge info">auto-selected</span></label>
+                                <input class="ui-input" value="infobip" readonly style="background:#f8fafc;color:#475569;" />
+                                <p class="ui-chip-row" style="margin:3px 0 0;">Only one provider supports WhatsApp in this deployment → dropdown is hidden. It re-appears if a second WhatsApp-capable provider is later added.</p>
+                            </div>
+
+                            <!-- Provider-specific form (Infobip · WhatsApp) — Embedded Signup launcher -->
+                            <div style="background:#fff8e1;border-left:4px solid #d4a72c;padding:10px 12px;border-radius:4px;margin:12px 0 10px;">
+                                <b style="font-size:12.5px;">Infobip — WhatsApp enrolment via Meta Embedded Signup</b>
+                                <p class="ui-chip-row" style="margin:3px 0 0;">The tenant launches <b>Meta's Embedded Signup widget</b> (Meta Facebook JS SDK, hosted by Hermes as a Tech Provider, against Infobip's <code>solutionId</code>). All Meta-side details — legal name, display name, category, business profile — are collected by Meta directly from the tenant's Facebook Business Manager. On completion, Hermes captures <code>wabaId</code> + <code>phoneNumberId</code> from the ES callback and forwards them to Infobip via <code>POST /whatsapp/1/embedded-signup/registrations/share-waba</code>.</p>
+                            </div>
+                            <div class="ui-field" style="background:#fff;border:1px dashed #cbd5e1;border-radius:6px;padding:18px;text-align:center;">
+                                <p style="margin:0 0 10px;font-size:12.5px;color:#475569;">Click below to open Meta's Embedded Signup. The tenant will sign in with their Facebook account and select / create a WhatsApp Business Account.</p>
+                                <button class="ui-btn ui-btn-primary" style="background:#1877f2;">Launch Embedded Signup</button>
+                                <p class="ui-chip-row" style="margin:10px 0 0;">Status arrives asynchronously via webhook: <code>IN_PROGRESS</code> → <code>FINISHED</code>, or <code>FAILED</code>. Automatic Resource Association will create the matching <code>entityId</code> for the tenant's Business Manager ID.</p>
+                            </div>
+                        </div>
+                        <div class="ui-modal-foot">
+                            <button class="ui-btn ui-btn-secondary">Cancel</button>
+                            <button class="ui-btn ui-btn-primary">Done · binding created (state = requested, awaiting ES)</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="note"><b>Plugin contract that makes this work.</b> Each <code>IMessagingProvider</code> implementation declares (a) the channels it supports, and (b) per (provider × channel) pair, a <b>form schema</b> (field list + validation rules) plus a <b>submit handler</b> that maps the form to the provider's enrolment API. The page only knows about <i>sender · channel · provider</i>; everything inside the yellow band of the popup is provider-owned. Adding a new provider = drop in a plugin; the popup picks up its form schema automatically — no host-page change.</div>
+
+
+    <!-- =========================================================
+         §18 · Campaign message configuration (revised)
+         ========================================================= -->
+
+    <h2>18. Campaign Message Configuration — using providers in a use case</h2>
+    <p style="font-size:13.5px;">Everything in <b>§4 → §17</b> has built up the supply side: applications, entities, numbers, channel bindings, and the provider abstraction. This section is the <b>consumer side</b> — how those primitives are exposed when an operator configures the <i>message</i> on an existing campaign. <b>We do not create the campaign here</b>: it already exists. We only touch the <b>follow-up message configuration dialog</b> that opens when the operator enables (for example) the Speed2Lead follow-up on that campaign.</p>
+
+    <p style="font-size:13.5px;">Today's dialog (screenshot reproduced from the current admin) is <b>fixed to SMS</b>: a single "SMS provider" dropdown, a single message composer, and a "+ Add attempt" button that adds an empty row with no editor. The proposal generalises every one of those fields so the same dialog drives <b>SMS, WhatsApp, and any future channel</b> — and so every attempt carries its own composer instead of an empty placeholder.</p>
+
+    <div class="note" style="background:#fff7ed;border-left-color:#d4a72c;">
+        <b>Three design rules that drive the rest of §18 — all flowing from operator feedback:</b><br>
+        <b>① Provider is never picked.</b> The operator picks a sender; the provider is derived from that sender's <code>active</code> binding on the chosen channel (§15.3). The UI shows it read-only as a "via X" label so the operator can see who will deliver, but cannot pick it.<br>
+        <b>② Method is per slot, not global.</b> Personal, Agent and System reminders — and every attempt under <i>Post-call actions</i> — each carry their own <code>(Method, Sender)</code> pair. A Personal reminder can be WhatsApp while the Agent reminder is SMS; Attempt 1 can be SMS while Attempt 2 is WhatsApp. The dialog has <b>no top-level Method/Sender dropdown</b>.<br>
+        <b>③ The Enabled toggle is a gate, not a draft.</b> The body of the dialog is locked until Enabled is on. There is <b>no "save as draft when off"</b> — turning Enabled off and saving simply means the follow-up is disabled, but the per-slot configuration is still required to be filled in before Save is allowed.
+    </div>
+
+    <h3>18.1 What changes — current dialog vs proposed dialog</h3>
+    <table>
+        <thead><tr><th>Aspect</th><th>Today (fixed to SMS)</th><th>Proposed (channel-agnostic)</th></tr></thead>
+        <tbody>
+            <tr><td>Title</td><td><i>SMS Follow up configuration</i></td><td><i>Follow-up configuration</i> — neutral; the channel is a per-slot field, not the title</td></tr>
+            <tr><td>Enable toggle</td><td>Implicit (dialog opens only when Speed2Lead is enabled at the campaign level)</td><td><b>Explicit <code>Enabled</code> switch inside the dialog</b> — acts as a <b>gate</b>: the body is locked until Enabled is on. <b>No draft mode</b> — saving with Enabled off simply means the follow-up will not fire</td></tr>
+            <tr><td>Method</td><td>Hard-coded SMS · single value for the whole dialog</td><td><b>Per-slot Method dropdown</b> — Personal, Agent, System and each Attempt independently pick <code>SMS · WhatsApp · (future channel)</code>. Populated from the set of channels the deployment has at least one <code>active</code> binding for</td></tr>
+            <tr><td>Provider</td><td>"SMS provider" — explicit dropdown</td><td><b>Removed.</b> Derived from the chosen Sender's binding on the chosen Method (one binding = one provider, §15.3). Shown read-only as a <code>via {provider}</code> hint next to the Sender field — never picked by the operator</td></tr>
+            <tr><td>Sender</td><td>Implicit (one global SMS sender)</td><td><b>Per-slot Sender dropdown</b> — filtered to senders with an <code>active</code> binding on this slot's chosen Method. A WhatsApp slot cannot pick an SMS-only sender</td></tr>
+            <tr><td>Message body</td><td>Free-text textarea with markers — for SMS only</td><td>Channel-aware composer that <b>matches this slot's Method</b>: free text for SMS, <b>template picker</b> for channels that require approved templates (WhatsApp), with an inline "Create new template" path scoped to this slot's Sender</td></tr>
+            <tr><td>Reminder tabs</td><td>Personal / Agent / System textareas — all on the same channel</td><td>Same three tabs, but <b>each tab carries its own (Method · Sender · composer)</b>. Switching tabs is switching to a separate per-slot configuration, not just toggling text</td></tr>
+            <tr><td>"+ Add attempt"</td><td>Adds an empty row with no editor; "Attempts 1–6 will be without action"</td><td><b>Each attempt opens the same composer block</b> as Personal / Agent / System — including its own Method + Sender + body/template. An attempt may still be marked <i>no action</i>, but it is no longer the default</td></tr>
+        </tbody>
+    </table>
+
+    <h3>18.2 Field cascade — per slot (Personal · Agent · System · each Attempt)</h3>
+    <p style="font-size:13.5px;">There is no global cascade any more. The cascade below runs <b>once per slot</b>: it is repeated for the Personal tab, the Agent tab, the System tab, and every Attempt. The Enabled gate sits above all of them. Provider is purely derived from Sender — it never accepts input.</p>
+    <div class="mermaid">
+        flowchart TB
+        E["Enabled toggle<br />(gate — body is locked while off,<br />no draft saved when off)"]
+        REPEAT["Repeats for every slot:<br />Personal · Agent · System · each Attempt"]
+        M["Method<br />SMS · WhatsApp · ..."]
+        S["Sender<br />(filtered: active binding for this Method)"]
+        PROV["Provider <i>(derived, read-only)</i><br />= Sender's binding.provider"]
+        TPL{"Channel needs<br />a template?"}
+        FT["Free-text composer<br />(SMS path)"]
+        PT["Template picker<br />filtered to approved templates<br />for Sender × Method × language"]
+        NEW["+ Create new template<br />(opens §8 editor, pre-bound to this slot's Sender)"]
+        E -->|locked → unlocked| REPEAT
+        REPEAT --> M
+        M --> S
+        S -. derives .-> PROV
+        S --> TPL
+        TPL -->|no| FT
+        TPL -->|yes| PT
+        PT -. fallback .-> NEW
+        style E fill:#e3f2fd
+        style REPEAT fill:#f3e5f5,stroke-dasharray: 5 5
+        style M fill:#fff3e0
+        style S fill:#fff3e0
+        style PROV fill:#eef2f7,stroke-dasharray: 4 4,color:#475569
+        style TPL fill:#fce4ec,stroke:#e2336b,stroke-width:2px
+        style FT fill:#e8f5e9
+        style PT fill:#e8f5e9
+        style NEW fill:#f3e5f5
+    </div>
+
+    <h3>18.3 UI mock — proposed follow-up configuration dialog</h3>
+    <p style="font-size:13.5px;">The dialog header loses its "SMS" qualifier. At the top sits a single <b>Enabled</b> switch and the global <b>Time between message and callback</b>. Below that, the Reminder Message tabs and every Post-call attempt each render an embedded <b>(Method · Sender + via-provider hint · composer)</b> block — the mock below shows Personal on WhatsApp, Agent on SMS, and two attempts on two different methods to make the per-slot model explicit.</p>
+
+    <style>
+        .ui-dialog {
+            background: #fff;
+            border: 1px solid #cfd8dc;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin: 14px 0;
+            overflow: hidden;
+            font-size: 13px;
+        }
+
+            .ui-dialog .dlg-head {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 14px 22px;
+                border-bottom: 1px solid #eef0f4;
+            }
+
+                .ui-dialog .dlg-head .ttl {
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #1e293b;
+                }
+
+                .ui-dialog .dlg-head .close {
+                    color: #94a3b8;
+                    font-size: 18px;
+                    cursor: pointer;
+                }
+
+            .ui-dialog .dlg-body {
+                padding: 18px 22px;
+                background: #fafbfc;
+            }
+
+            .ui-dialog .dlg-foot {
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                padding: 12px 22px;
+                border-top: 1px solid #eef0f4;
+                background: #fff;
+            }
+
+            .ui-dialog .dlg-grid {
+                display: grid;
+                grid-template-columns: 220px 1fr;
+                gap: 10px 16px;
+                align-items: center;
+                margin-bottom: 6px;
+            }
+
+                .ui-dialog .dlg-grid .lbl {
+                    color: #475569;
+                    font-size: 12.5px;
+                }
+
+                .ui-dialog .dlg-grid .ctl {
+                    font-size: 12.5px;
+                }
+
+            .ui-dialog .section-head {
+                font-weight: 600;
+                color: #1e293b;
+                font-size: 13.5px;
+                margin: 18px 0 8px;
+                padding-top: 12px;
+                border-top: 1px solid #eef0f4;
+            }
+
+            .ui-dialog .tabs {
+                display: flex;
+                gap: 18px;
+                border-bottom: 1px solid #e0e6eb;
+                margin-bottom: 10px;
+            }
+
+            .ui-dialog .tab {
+                padding: 6px 2px;
+                font-size: 12.5px;
+                color: #6b7280;
+                cursor: pointer;
+            }
+
+                .ui-dialog .tab.active {
+                    color: #1e293b;
+                    font-weight: 600;
+                    border-bottom: 2px solid #1e293b;
+                }
+
+            .ui-dialog .composer {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 14px;
+            }
+
+            .ui-dialog .preview {
+                background: #f1f5f9;
+                border-radius: 8px;
+                padding: 12px 14px;
+                font-size: 12.5px;
+                color: #1e293b;
+            }
+
+                .ui-dialog .preview .sender-row {
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 11px;
+                    color: #6b7280;
+                    margin-bottom: 6px;
+                }
+
+            .ui-dialog textarea.ui-input {
+                min-height: 110px;
+                font-family: ui-monospace, monospace;
+                resize: vertical;
+            }
+
+            .ui-dialog .markers {
+                margin-top: 6px;
+                font-size: 11.5px;
+                color: #6b7280;
+            }
+
+                .ui-dialog .markers .chip {
+                    display: inline-block;
+                    background: #f1f5f9;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 4px;
+                    padding: 1px 6px;
+                    margin: 0 4px 4px 0;
+                    font-family: ui-monospace, monospace;
+                }
+
+            .ui-dialog .attempt {
+                background: #fff;
+                border: 1px solid #e0e6eb;
+                border-radius: 6px;
+                padding: 12px 14px;
+                margin-bottom: 8px;
+            }
+
+                .ui-dialog .attempt .att-head {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 8px;
+                }
+
+                    .ui-dialog .attempt .att-head .name {
+                        font-weight: 600;
+                        font-size: 12.5px;
+                        color: #1e293b;
+                    }
+
+                .ui-dialog .attempt .att-mini textarea.ui-input {
+                    min-height: 70px;
+                }
+
+        .ui-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .ui-toggle .switch {
+                width: 32px;
+                height: 18px;
+                background: #2ea043;
+                border-radius: 10px;
+                position: relative;
+                display: inline-block;
+            }
+
+                .ui-toggle .switch::after {
+                    content: '';
+                    position: absolute;
+                    top: 2px;
+                    right: 2px;
+                    width: 14px;
+                    height: 14px;
+                    background: #fff;
+                    border-radius: 50%;
+                }
+
+                .ui-toggle .switch.off {
+                    background: #cbd5e1;
+                }
+
+                    .ui-toggle .switch.off::after {
+                        left: 2px;
+                        right: auto;
+                    }
+
+        .tpl-card {
+            border: 1px solid #e0e6eb;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .tpl-card.selected {
+                border-color: #e2336b;
+                box-shadow: inset 3px 0 0 #e2336b;
+            }
+
+            .tpl-card .meta {
+                font-size: 11.5px;
+                color: #6b7280;
+            }
+
+            .tpl-card .name {
+                font-weight: 600;
+                color: #1e293b;
+                font-size: 12.5px;
+            }
+    </style>
+
+    <style>
+        .ui-dialog .slot-grid {
+            display: grid;
+            grid-template-columns: 110px 1fr;
+            gap: 8px 14px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+            .ui-dialog .slot-grid .lbl {
+                color: #475569;
+                font-size: 11.5px;
+            }
+
+        .ui-dialog .via {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 1px 8px;
+            border-radius: 10px;
+            background: #eef2f7;
+            color: #475569;
+            font-size: 11px;
+            font-family: ui-monospace, monospace;
+        }
+
+        .ui-dialog .locked {
+            opacity: 0.45;
+            pointer-events: none;
+            background: repeating-linear-gradient(45deg, #f8fafc, #f8fafc 6px, #f1f5f9 6px, #f1f5f9 12px);
+        }
+
+        .ui-dialog .gate-banner {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: #991b1b;
+        }
+    </style>
+
+    <div class="ui-dialog">
+        <div class="dlg-head">
+            <div class="ttl">Follow-up configuration <span class="ui-badge info" style="margin-left:8px;">campaign · Acme Spring Promo</span></div>
+            <div class="close">×</div>
+        </div>
+        <div class="dlg-body">
+
+            <!-- Top block: ONLY the gate + the global delay -->
+            <div class="dlg-grid">
+                <div class="lbl">Enabled</div>
+                <div class="ctl">
+                    <span class="ui-toggle"><span class="switch"></span><span><b>On</b> — follow-up will run for this campaign</span></span>
+                    <p style="margin:4px 0 0;font-size:11.5px;color:#6b7280;">Acts as a <b>gate</b>: the body below is locked until this is on. Toggling off does <i>not</i> save a draft — turning it off just means the follow-up will not fire.</p>
+                </div>
+
+                <div class="lbl">Time between message and callback</div>
+                <div class="ctl"><input class="ui-input" value="15" style="max-width:120px;" /> <span style="color:#6b7280;font-size:11.5px;">minutes</span> <span class="ui-badge info" style="margin-left:6px;">applies to all slots</span></div>
+            </div>
+
+            <!-- Reminder Message block — each tab is its own (Method · Sender · composer) slot -->
+            <div class="section-head">Reminder Message <span style="font-weight:400;font-size:11.5px;color:#6b7280;margin-left:8px;">each tab carries its own Method &amp; Sender</span></div>
+            <div class="tabs">
+                <div class="tab active">Personal <span class="ui-badge info" style="margin-left:4px;">WhatsApp</span></div>
+                <div class="tab">Agent <span class="ui-badge" style="margin-left:4px;background:#e0f2fe;color:#075985;">SMS</span></div>
+                <div class="tab">System <span class="ui-badge" style="margin-left:4px;background:#e0f2fe;color:#075985;">SMS</span></div>
+            </div>
+
+            <!-- ============ PERSONAL TAB · WhatsApp slot ============ -->
+            <div class="slot-grid">
+                <div class="lbl">Method</div>
+                <div class="ctl">
+                    <select class="ui-input" style="max-width:300px;">
+                        <option>WhatsApp</option>
+                        <option>SMS</option>
+                        <option disabled>RCS — no active binding</option>
+                    </select>
+                </div>
+                <div class="lbl">Sender</div>
+                <div class="ctl">
+                    <select class="ui-input" style="max-width:420px;">
+                        <option>Acme Support · +33 1 23 45 67 89</option>
+                        <option>Acme Sales · +33 1 99 88 77 66</option>
+                        <option disabled>Acme Ops · +33 1 55 44 33 22 — no active WhatsApp binding</option>
+                    </select>
+                    <span class="via">via infobip</span>
+                    <p style="margin:4px 0 0;font-size:11.5px;color:#6b7280;">Filtered to senders with an <code>active</code> WhatsApp binding (§15.3). The <code>via {provider}</code> badge is <b>read-only</b> — derived from the chosen sender's binding, never picked.</p>
+                </div>
+            </div>
+
+            <!-- WhatsApp composer = template picker -->
+            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 12px;margin:8px 0 10px;font-size:12px;color:#92400e;">
+                Channel <b>WhatsApp</b> requires an approved template — pick one below or create a new one (§8).
+            </div>
+            <div class="composer">
+                <div>
+                    <div class="tpl-card selected">
+                        <div>
+                            <div class="name">callback_reminder_personal · en</div>
+                            <div class="meta">Body: <code>Hi {{1}}, your advisor will call you in {{2}} minutes.</code></div>
+                            <div class="meta">Approved · 2026-04-12 · Sender: +33 1 23 45 67 89</div>
+                        </div>
+                        <span class="ui-badge ok">APPROVED</span>
+                    </div>
+                    <div class="tpl-card">
+                        <div>
+                            <div class="name">callback_reminder_personal · fr</div>
+                            <div class="meta">Body: <code>Bonjour {{1}}, votre conseiller vous rappelle dans {{2}} minutes.</code></div>
+                            <div class="meta">Approved · 2026-04-12 · Sender: +33 1 23 45 67 89</div>
+                        </div>
+                        <span class="ui-badge ok">APPROVED</span>
+                    </div>
+                    <button class="ui-btn ui-btn-secondary" style="margin-top:6px;">+ Create new template</button>
+                    <p class="markers">
+                        Templates filtered by <i>this slot's</i> sender × method × language. Marker → placeholder mapping:
+                        <span class="chip">{phone} → {{1}}</span>
+                        <span class="chip">{minutes} → {{2}}</span>
+                        <span class="chip">{callback_time} → {{3}}</span>
+                    </p>
+                </div>
+                <div class="preview">
+                    <div class="sender-row"><span>Acme Support · +33 1 23 45 67 89 · WhatsApp</span><span>Tuesday 16:44</span></div>
+                    Hi <b>+33612345678</b>, your advisor will call you in <b>15</b> minutes.
+                </div>
+            </div>
+
+            <!-- Inline hint about other tabs -->
+            <div style="background:#f0f7ff;border-left:3px solid #1e40af;padding:8px 12px;margin:14px 0 0;font-size:11.5px;color:#1e3a8a;">
+                <b>Agent</b> and <b>System</b> tabs are <i>independent slots</i>. In this example, the operator picked <b>SMS</b> + sender <i>AcmeSMS</i> for them — switching tabs renders an SMS free-text composer with the same marker palette, no template picker.
+            </div>
+
+            <!-- ============ POST-CALL ACTIONS ============ -->
+            <div class="section-head">Post-call actions <span style="font-weight:400;font-size:11.5px;color:#6b7280;margin-left:8px;">each attempt is its own slot</span></div>
+            <p style="font-size:11.5px;color:#6b7280;margin:0 0 8px;">Every attempt carries its own <b>Method</b>, <b>Sender</b> and composer — exactly the same widgets as the tabs above. An attempt may still be marked <i>no action</i> for cadence-only padding.</p>
+
+            <!-- Attempt 1 · WhatsApp -->
+            <div class="attempt">
+                <div class="att-head">
+                    <div class="name">Attempt 1 · 30 min after call <span class="ui-badge info" style="margin-left:6px;">WhatsApp</span></div>
+                    <div>
+                        <button class="ui-btn ui-btn-secondary">Mark as no-action</button>
+                        <button class="ui-btn ui-btn-secondary">Remove</button>
+                    </div>
+                </div>
+                <div class="slot-grid">
+                    <div class="lbl">Method</div>
+                    <div class="ctl"><select class="ui-input" style="max-width:260px;"><option>WhatsApp</option><option>SMS</option></select></div>
+                    <div class="lbl">Sender</div>
+                    <div class="ctl">
+                        <select class="ui-input" style="max-width:360px;"><option>Acme Support · +33 1 23 45 67 89</option></select>
+                        <span class="via">via infobip</span>
+                    </div>
+                </div>
+                <div class="att-mini">
+                    <div class="tpl-card selected" style="margin:0;">
+                        <div>
+                            <div class="name">callback_followup_attempt1 · en</div>
+                            <div class="meta">Body: <code>{{1}}, we tried to reach you. Click {{2}} to reschedule.</code></div>
+                        </div>
+                        <span class="ui-badge ok">APPROVED</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attempt 2 · SMS (different method from Attempt 1) -->
+            <div class="attempt">
+                <div class="att-head">
+                    <div class="name">Attempt 2 · 2 h after attempt 1 <span class="ui-badge" style="margin-left:6px;background:#e0f2fe;color:#075985;">SMS</span></div>
+                    <div>
+                        <button class="ui-btn ui-btn-secondary">Mark as no-action</button>
+                        <button class="ui-btn ui-btn-secondary">Remove</button>
+                    </div>
+                </div>
+                <div class="slot-grid">
+                    <div class="lbl">Method</div>
+                    <div class="ctl"><select class="ui-input" style="max-width:260px;"><option selected>SMS</option><option>WhatsApp</option></select></div>
+                    <div class="lbl">Sender</div>
+                    <div class="ctl">
+                        <select class="ui-input" style="max-width:360px;"><option>AcmeSMS · AcmeSupport (alphanumeric)</option></select>
+                        <span class="via">via infobip</span>
+                    </div>
+                </div>
+                <div class="att-mini">
+                    <textarea class="ui-input" style="min-height:60px;">Hi {phone_display}, we missed you. Reply CALL to reschedule. — Acme</textarea>
+                    <p class="markers" style="margin-top:4px;">
+                        <span class="chip">{phone}</span><span class="chip">{phone_display}</span><span class="chip">{callback_time}</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Attempt 3 · no-action -->
+            <div class="attempt">
+                <div class="att-head">
+                    <div class="name">Attempt 3 · 1 d after attempt 2</div>
+                    <div>
+                        <span class="ui-badge">no action</span>
+                        <button class="ui-btn ui-btn-secondary">Configure message</button>
+                        <button class="ui-btn ui-btn-secondary">Remove</button>
+                    </div>
+                </div>
+                <p style="font-size:11.5px;color:#6b7280;margin:6px 0 0;">No message sent on this attempt — counts in the retry cadence only.</p>
+            </div>
+
+            <button class="ui-btn ui-btn-secondary" style="width:100%;border-style:dashed;">+ Add attempt</button>
+            <p style="font-size:11.5px;color:#6b7280;margin:6px 0 0;text-align:center;">Adding an attempt reveals a fresh slot block — Method · Sender · composer — exactly like the tabs above.</p>
+
+        </div>
+        <div class="dlg-foot">
+            <button class="ui-btn ui-btn-secondary">Cancel</button>
+            <button class="ui-btn ui-btn-primary">Save</button>
+        </div>
+    </div>
+
+    <p style="font-size:12px;color:#6b7280;margin-top:-6px;">Tip: when <b>Enabled</b> is <i>off</i>, the entire body below the gate renders <span style="background:repeating-linear-gradient(45deg,#f8fafc,#f8fafc 6px,#f1f5f9 6px,#f1f5f9 12px);padding:1px 6px;border-radius:3px;">hatched and non-interactive</span>, and <b>Save</b> is disabled until the operator turns the gate on.</p>
+
+    <h3>18.4 Two channel variants of the same composer — per slot</h3>
+    <p style="font-size:13.5px;">The composer is one component with two render modes selected from <b>this slot's Method</b>. Both share the same marker palette (<code>{phone}</code>, <code>{time}</code>, <code>{date}</code>, <code>{minutes}</code>, <code>{callback_time}</code>, <code>{phone_display}</code>) so a Personal/Agent/System message — and any per-attempt message — can be authored with the same mental model regardless of channel. <b>Each slot binds its own (Method, Sender)</b>; the provider is whatever the chosen sender's binding declares and is shown as a read-only <code>via X</code> hint.</p>
+
+    <table>
+        <thead><tr><th>Method</th><th>Composer mode</th><th>What's stored</th><th>Send-time behaviour</th></tr></thead>
+        <tbody>
+            <tr>
+                <td><b>SMS</b></td>
+                <td>Free-text textarea with marker chips — identical to today's editor</td>
+                <td>Raw text with <code>{marker}</code> tokens</td>
+                <td>Markers substituted at send; payload posted to <code>/messages-api/1/messages</code> with <code>channel = "SMS"</code></td>
+            </tr>
+            <tr>
+                <td><b>WhatsApp</b></td>
+                <td>Template picker filtered by <code>sender × language</code> + "Create new template" deep-link into <b>§8 WhatsappTemplatesController</b></td>
+                <td><code>templateName</code> + ordered marker→placeholder mapping (which marker fills <code>{{1}}</code>, <code>{{2}}</code>, …)</td>
+                <td>Markers substituted into <code>templateData.body.placeholders[]</code>; payload posted with <code>messages[].template.templateName</code> (see §8.1)</td>
+            </tr>
+            <tr>
+                <td><b>Future channel</b></td>
+                <td>Mode declared by the provider plugin (e.g. RCS rich card builder)</td>
+                <td>Channel-specific schema</td>
+                <td>Provider plugin owns the rendering — host page is unchanged</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>18.5 Template picker — surface rules (per slot)</h3>
+    <div class="mermaid">
+        flowchart TB
+        Q["Open template picker<br />(inside one slot)"]
+        Q --> F1["Filter by this slot's Sender"]
+        F1 --> F2["Filter by Channel<br />= this slot's Method"]
+        F2 --> F3["Filter by status ∈ {APPROVED, PENDING}"]
+        F3 --> L{"Any templates?"}
+        L -->|yes| P["Show as list of cards<br />name · body preview · status · language"]
+        L -->|no| N["Empty state<br />+ Create new template (primary CTA)"]
+        P --> A["Operator picks one"]
+        P --> C["+ Create new template<br />(secondary CTA, always visible)"]
+        N --> C
+        C --> T["Deep-link into §8 WhatsappTemplates editor,<br />pre-bound to this slot's Sender + Channel + language"]
+        T --> R["Returns to slot with<br />new template selected · status = PENDING"]
+        style L fill:#fce4ec,stroke:#e2336b,stroke-width:2px
+        style C fill:#fff3e0
+        style T fill:#e3f2fd
+    </div>
+
+    <div class="note"><b>Why the picker scopes to the Sender, not the Provider:</b> WhatsApp templates are registered <i>per WhatsApp sender</i> (Meta-side). A template approved for <code>+33 1 23 45 67 89</code> is not usable for another sender even on the same provider. The picker mirrors that constraint at the UI level so saving a slot with a template that does not belong to <i>its own</i> sender is structurally impossible.</div>
+
+    <h3>18.6 Data shape — what gets saved</h3>
+    <p style="font-size:13.5px;">One row in <code>campaign_followup_config</code> per (campaign × use case) holding only the gate and the global delay. <b>Method, Sender and BindingId live on the per-slot rows</b> — every <i>Personal/Agent/System</i> message is its own row, and every attempt is its own row. The binding catalog (§15.3) stays the source of truth; the follow-up config only stores <i>which</i> binding and <i>which</i> template each slot picked. Provider is <b>not stored</b> — it is read through the binding at send time (<code>binding.providerCode</code>), so it can never disagree with the binding.</p>
+    <div class="mermaid">
+        erDiagram
+        CAMPAIGN_FOLLOWUP_CONFIG ||--o{ CAMPAIGN_FOLLOWUP_MESSAGE : "personal / agent / system"
+        CAMPAIGN_FOLLOWUP_CONFIG ||--o{ CAMPAIGN_FOLLOWUP_ATTEMPT : "1..N attempts"
+        CAMPAIGN_FOLLOWUP_MESSAGE }o--|| NUMBER_CHANNEL_BINDING : "per-slot (Method × Sender)"
+        CAMPAIGN_FOLLOWUP_ATTEMPT }o--|| NUMBER_CHANNEL_BINDING : "per-slot (Method × Sender)"
+        CAMPAIGN_FOLLOWUP_MESSAGE }o--o| WHATSAPP_TEMPLATE : "(WhatsApp slot only)"
+        CAMPAIGN_FOLLOWUP_ATTEMPT }o--o| WHATSAPP_TEMPLATE : "(WhatsApp slot only)"
+        CAMPAIGN_FOLLOWUP_CONFIG {
+        int Id PK
+        int CampaignId FK
+        string UseCase "speed2lead | ..."
+        bool Enabled "gate — body locked while off, no draft saved"
+        int DelayMinutes "global · time between message and callback"
+        datetime UpdatedAt
+        }
+        CAMPAIGN_FOLLOWUP_MESSAGE {
+        int Id PK
+        int ConfigId FK
+        string Kind "personal | agent | system"
+        string Method "SMS | WhatsApp | ..."
+        int BindingId FK "Sender × Method (§15.3) — provider derived"
+        string ComposerMode "freetext | template"
+        string BodyText "freetext mode"
+        int TemplateId FK "template mode"
+        string MarkerMap "JSON: marker → placeholder index"
+        }
+        CAMPAIGN_FOLLOWUP_ATTEMPT {
+        int Id PK
+        int ConfigId FK
+        int Ordinal "1..N"
+        int DelayMinutesAfterPrev
+        bool IsNoAction "true = placeholder only · skips Method/Sender/body"
+        string Method "SMS | WhatsApp | ..."
+        int BindingId FK "Sender × Method (§15.3) — provider derived"
+        string ComposerMode "freetext | template"
+        string BodyText
+        int TemplateId FK
+        string MarkerMap
+        }
+        WHATSAPP_TEMPLATE {
+        int Id PK
+        int SenderBindingId FK
+        string TemplateName
+        string Language
+        string Status "PENDING | APPROVED | REJECTED | DISABLED"
+        }
+        NUMBER_CHANNEL_BINDING {
+        int Id PK
+        int SenderId FK
+        string Channel "SMS | WhatsApp | ..."
+        string ProviderCode "derived from this row at send time"
+        string State "active | pending | ..."
+        }
+    </div>
+
+    <div class="note"><b>Validation rule on save:</b> for every non-<code>IsNoAction</code> slot, <code>BindingId.Channel</code> must equal <code>Method</code> and <code>BindingId.State</code> must be <code>active</code>. The form prevents inconsistency upstream (Sender dropdown is filtered by Method), but the rule is re-checked server-side so an Infobip-side suspension between configure and save cannot smuggle through a dead binding.</div>
+
+    <h3>18.7 Acceptance — what "done" looks like</h3>
+    <div class="status-grid">
+        <div class="pill done"><b>Title is channel-agnostic</b> "Follow-up configuration" (not "SMS Follow up").</div>
+        <div class="pill done"><b>Enabled toggle is a gate</b> the dialog body is locked while off, Save is disabled, and there is <b>no "save as draft when off"</b>.</div>
+        <div class="pill done"><b>No global Method or Sender field</b> only the gate and the global delay live above the tabs.</div>
+        <div class="pill done"><b>No Provider field anywhere</b> provider is derived from the chosen sender's binding and shown read-only as <code>via {provider}</code>.</div>
+        <div class="pill done"><b>Per-slot Method &amp; Sender</b> Personal, Agent, System and each Attempt independently pick their own channel and sender.</div>
+        <div class="pill done"><b>Sender dropdown is filtered per slot</b> restricted to senders with an <code>active</code> binding on <i>this slot's</i> Method.</div>
+        <div class="pill done"><b>Composer adapts per slot</b> free-text for SMS, template picker for WhatsApp, "+ Create new template" deep-link pre-bound to this slot's sender.</div>
+        <div class="pill done"><b>"+ Add attempt"</b> reveals a fresh slot block (Method · Sender · composer) — never an empty row.</div>
+        <div class="pill partial"><b>Marker → placeholder mapping persisted</b> per slot — inline editing UX is a follow-up.</div>
+    </div>
+
+    <div class="note" style="background:#e3f2fd;border-left-color:#1e40af;"><b>Why §18 sits between §17.4 and §17.5's UI mock:</b> §4 → §17.4 build the <i>supply</i> (applications, entities, numbers, bindings, providers, templates). §18 is the first place those supplies are <i>consumed</i> by an end-user form — and is therefore the cleanest test of whether the abstractions above hold up. Every field in §18.3 traces back to a structure introduced earlier: <b>Method</b> → §6/§7, <b>Provider</b> → §15.2/§17, <b>Sender</b> → §15.1, <b>Binding</b> → §15.3/§17.3, <b>Template</b> → §8. §17.5 below renders the admin-side mock for the supply layer §18 just consumed.</div>
+
+
+    <!-- =========================================================
+         §19 · Templates admin page — list, create, "new version"
+         ========================================================= -->
+
+    <h2>19. Admin → Templates — list, create, edit, and "new version"</h2>
+    <p style="font-size:13.5px;">A dedicated admin page where the operator manages the WhatsApp templates registered under each Sender (§17). It is where the <b>+ Create new template</b> deep-link from <b>§18.5</b> lands. Four jobs: <b>(1)</b> show every template per sender with its Meta-side status, <b>(2)</b> submit a new template, <b>(3)</b> <b>edit</b> an existing template — Meta added template editing in 2023; Infobip exposes it via <a href="https://www.infobip.com/docs/api/channels/whatsapp/whatsapp-service-management/whatsapp-template-management/edit-whatsapp-template">PUT&nbsp;/whatsapp/2/senders/{sender}/templates/{templateName}</a>, and <b>(4)</b> create a <b>new version</b> for the cases edit cannot cover (placeholder count change, identity change, intentional rollback target).</p>
+
+    <div class="note"><b>What edit can and cannot change</b><br>
+        <b>Editable:</b> body text · header (TEXT or media sample URL) · footer text · button labels / URLs / phone numbers.<br>
+        <b>Not editable on the same template:</b> name · language · placeholder <i>count</i> (you can rewrite text around a marker, but adding or removing a marker forces a new version). Category has its own dedicated change-category endpoint with separate Meta rules.<br>
+        <b>Meta guardrails on edit:</b> template must be <code>APPROVED</code>, <code>REJECTED</code>, or <code>PAUSED</code> (never <code>PENDING</code>); <b>one edit per 24 h</b>; <b>max 10 edits per template per calendar month</b>. After an edit, status returns to <code>PENDING</code> for re-review — but the <b>previously approved version stays sendable</b> until the new content is approved, so live campaigns are never interrupted by an edit.</div>
+
+    <div class="note" style="background:#f8fafc;border-left-color:#475569;"><b>When to use Edit vs + New version.</b> Edit is the default for tweaking wording, swapping a button URL, fixing a typo in the footer — the 95% case. <b>+ New version</b> is the fallback for structural changes the edit endpoint refuses: adding or removing a placeholder, switching language, renaming the template, or deliberately keeping the old version as a rollback target. It is also the path for the rare templates Meta has moved to <code>DISABLED</code> (terminal — edit is no longer accepted).</div>
+
+    <h3>19.1 Lifecycle — Hermes draft → Meta review → live → edit / retire</h3>
+    <p style="font-size:13.5px;">Five Meta-side statuses, plus one Hermes-only <code>DRAFT</code> state for templates the operator has started but not yet submitted. From <code>PENDING</code> onwards the status is owned by Meta — the Infobip worker (§15.2) keeps the local copy fresh by polling <code>/whatsapp/2/senders/{sender}/templates</code> each cycle. The Edit self-loop is gated by Meta's quotas (24 h cooldown · 10 edits / template / month) and only fires from <code>APPROVED</code>, <code>REJECTED</code>, or <code>PAUSED</code>.</p>
+    <div class="mermaid">
+        flowchart LR
+        D["DRAFT<br/>Hermes-local, not yet sent"] -->|"Submit"| P["PENDING<br/>under Meta review<br/>edit blocked"]
+        P -->|"Approve"| A["APPROVED<br/>usable for sending"]
+        P -->|"Reject"| R["REJECTED<br/>plus rejectionReason"]
+        A -->|"Edit · 24h cooldown · 10 per month"| P
+        R -.->|"Edit · same quotas"| P
+        A -->|"Quality drop"| PA["PAUSED<br/>temporary"]
+        PA -->|"Recovers"| A
+        PA -.->|"Edit · same quotas"| P
+        A -->|"Policy violation"| DI["DISABLED<br/>terminal · edit refused"]
+        A -->|"New version approved · operator retires"| X["deleted"]
+        R -.->|"New version · marker-count or rename change"| P
+        style D fill:#eef2f7
+        style P fill:#fef3c7
+        style A fill:#d1fae5
+        style R fill:#fee2e2
+        style PA fill:#fef3c7
+        style DI fill:#fee2e2
+        style X fill:#f5f5f5,stroke-dasharray: 5 5
+    </div>
+    <p style="font-size:12.5px;color:#6b7280;">Edit returns the template to <code>PENDING</code>, but the <b>previously approved content stays sendable</b> on Meta's side until the new content is approved — so unlike "+ New version", an edit never interrupts live campaigns and never needs a retirement step.</p>
+
+    <h3>19.2 Field-by-field — what the editor captures</h3>
+    <p style="font-size:13.5px;">A WhatsApp template is a stack of up to four visual blocks (<i>header · body · footer · buttons</i>), wrapped by three identity fields (<i>name · language · category</i>) that key the template inside Meta's catalog. The table below is the source-of-truth for the editor's form fields, including which are required and what to validate client-side. Defaults marked <b>locked</b> apply to <i>new version</i> mode — those three identity fields are inherited from the parent template and never editable.</p>
+
+    <div class="note" style="background:#fff7ed;border-left-color:#d4a72c;"><b>Fixed marker palette · operator cannot define placeholders.</b> Every place the editor accepts a dynamic value (body, header text, button URL) the user inserts <b>only</b> from the same six markers used by the campaign composer in §18.4: <code>{phone}</code> · <code>{time}</code> · <code>{date}</code> · <code>{minutes}</code> · <code>{callback_time}</code> · <code>{phone_display}</code>. Markers are added via clickable chips — there is no syntax to type a new placeholder, rename one, or define a custom name. Meta's required sample values are auto-derived from each marker's system-wide sample, so the operator never types example data either. Under the hood, Hermes registers each template with Meta in <b>NAMED parameter format</b> (the marker names become Meta's parameter names), so the body sent to Infobip is e.g. <code>"Hi {{phone_display}}, callback in {{minutes}} min."</code> — but that is an implementation detail the operator never sees.</div>
+
+    <div class="note" style="background:#eff6ff;border-left-color:#1e40af;"><b>Edit-mode constraint on markers.</b> Meta's edit endpoint accepts changes to the text <i>around</i> a marker but refuses to add or remove markers. The editor in Edit mode therefore <b>disables the chip palette</b> for any marker that would change the template's marker set — green "in use" chips stay clickable for re-positioning, yellow "available" chips are greyed out with the tooltip <i>"Adding a marker requires + New version"</i>. The form switches to + New version with one click if the operator needs to add/remove markers.</div>
+
+    <table>
+        <thead><tr><th>Block</th><th>Field</th><th>Type</th><th>Required</th><th>Constraint / UI behaviour</th></tr></thead>
+        <tbody>
+            <tr><td rowspan="4"><b>Identity</b></td><td><b>Sender</b></td><td>Dropdown</td><td>Yes</td><td>Filtered to senders with an <code>active</code> WhatsApp binding (§15.3). <b>Locked on Edit and on New version</b> — sender is part of Meta's primary key.</td></tr>
+            <tr><td><b>Name</b></td><td>String</td><td>Yes</td><td>Lowercase <code>a-z</code> / digits / underscore only; max 512 chars. <b>Locked on Edit</b> (Meta-immutable). On New version: locked &amp; system-suffixed <code>_v2</code>, <code>_v3</code>….</td></tr>
+            <tr><td><b>Language</b></td><td>Dropdown</td><td>Yes</td><td>BCP-47 code (<code>en</code>, <code>en_US</code>, <code>fr</code>…). <b>Locked on Edit and on New version</b> — language is part of Meta's primary key.</td></tr>
+            <tr><td><b>Category</b></td><td>Radio</td><td>Yes</td><td><code>MARKETING</code> · <code>UTILITY</code> · <code>AUTHENTICATION</code>. Different Meta pricing &amp; review timelines — surface as tooltip. <b>Locked on Edit</b> (Meta exposes a separate <i>change-category</i> endpoint). <b>Locked on New version</b>.</td></tr>
+            <tr><td rowspan="3"><b>Header</b><br/><span style="color:#6b7280;font-weight:400;">(optional)</span></td><td><b>Format</b></td><td>Enum</td><td>—</td><td><code>TEXT · IMAGE · VIDEO · DOCUMENT · LOCATION</code>. Drives which sub-field renders below it.</td></tr>
+            <tr><td><b>Text</b></td><td>String</td><td>If format = TEXT</td><td>Max 60 chars. May contain at most <b>one marker</b> from the fixed palette, inserted via chip — no typed placeholders.</td></tr>
+            <tr><td><b>Sample asset URL</b></td><td>URL</td><td>If format ∈ {IMAGE, VIDEO, DOCUMENT}</td><td>Sample media file Meta sees during review. <b>Not applicable to TEXT</b> — for a TEXT header with a marker, the sample value Meta sees is auto-derived from the marker's system sample (no operator input).</td></tr>
+            <tr><td><b>Body</b><br/><span style="color:#6b7280;font-weight:400;">(required)</span></td><td><b>Text</b></td><td>Multi-line string</td><td><b>Yes</b></td><td>Max 1024 chars. Markers from the fixed palette are inserted via chips; any marker can appear zero, one, or many times. Live char counter + a list of used markers shown beneath the textarea. <b>No <code>Examples</code> input</b> — Meta's required samples are auto-derived from each used marker's system sample, so the form has nothing to ask the operator.</td></tr>
+            <tr><td><b>Footer</b><br/><span style="color:#6b7280;font-weight:400;">(optional)</span></td><td><b>Text</b></td><td>String</td><td>—</td><td>Max 60 chars. <b>No markers allowed</b> — the chip palette is disabled inside this field.</td></tr>
+            <tr><td rowspan="3"><b>Buttons</b><br/><span style="color:#6b7280;font-weight:400;">(optional · max 10)</span></td><td><b>Type</b></td><td>Enum</td><td>—</td><td><code>QUICK_REPLY</code> · <code>URL</code> · <code>PHONE_NUMBER</code> · <code>COPY_CODE</code> · <code>OTP</code> · <code>FLOW</code>. Drives which other fields are shown for that button row.</td></tr>
+            <tr><td><b>Label</b></td><td>String</td><td>For most types</td><td>Max 25 chars — what the recipient sees on the button. <b>No markers</b> — labels are static.</td></tr>
+            <tr><td><b>Type-conditional</b></td><td>varies</td><td>—</td><td><code>url</code> for URL — may contain one trailing marker from the fixed palette inserted via chip (e.g. <code>https://acme.com/?ref={phone}</code>); the URL example sent to Meta is auto-derived from the marker's sample. <code>phoneNumber</code> for PHONE_NUMBER · <code>otpType</code> for OTP · <code>flowId</code> + <code>flowAction</code> for FLOW. None of these accept markers other than the URL case.</td></tr>
+        </tbody>
+    </table>
+    <p style="font-size:12.5px;color:#6b7280;">Read-only fields returned by GET (never editable, always displayed in the detail view): <code>status</code>, <code>rejectionReason</code>, <code>qualityScore</code>, Meta-side <code>id</code>.</p>
+
+    <h3>19.3 UI mock — Templates list page</h3>
+    <p style="font-size:13.5px;">Top of the page: filter strip + <b>+ New template</b>. Middle: status summary stats. Bottom: the templates table, one row per (template × language). Status badges drive eye flow — green = sendable, yellow = waiting on Meta, red = rejected or disabled.</p>
+    <div class="ui-frame">
+        <div class="ui-topbar">
+            <div class="brand">Hermes360 · Admin · Templates</div>
+            <div class="user">ops@deployer.com</div>
+        </div>
+        <div class="ui-body">
+            <div class="ui-sidebar">
+                <div class="ui-nav-item">⚙ Integration</div>
+                <div class="ui-nav-item">🔌 Providers</div>
+                <div class="ui-nav-item">👥 Customers</div>
+                <div class="ui-nav-item">📞 Numbers</div>
+                <div class="ui-nav-item active">💬 Templates</div>
+                <div class="ui-nav-item">🔔 Webhooks</div>
+            </div>
+            <div class="ui-content">
+                <div class="ui-h">WhatsApp Templates</div>
+                <div class="ui-sub">Templates registered with Meta per Sender. Status is owned by Meta and refreshed every cycle by the Infobip worker (§15.2).</div>
+
+                <div class="ui-card">
+                    <div class="ui-card-title">
+                        <span>Filters</span>
+                        <button class="ui-btn ui-btn-primary">+ New template</button>
+                    </div>
+                    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;">
+                        <div class="ui-field" style="flex:2;min-width:240px;margin-bottom:0;">
+                            <label>Sender</label>
+                            <select class="ui-input"><option>All senders</option><option selected>Acme Support · +33 1 23 45 67 89</option><option>Globex Notifications · +33 9 87 65 43 21</option></select>
+                        </div>
+                        <div class="ui-field" style="min-width:140px;margin-bottom:0;">
+                            <label>Status</label>
+                            <select class="ui-input"><option>All</option><option>APPROVED</option><option>PENDING</option><option>REJECTED</option><option>PAUSED</option></select>
+                        </div>
+                        <div class="ui-field" style="min-width:140px;margin-bottom:0;">
+                            <label>Category</label>
+                            <select class="ui-input"><option>All</option><option>MARKETING</option><option>UTILITY</option><option>AUTHENTICATION</option></select>
+                        </div>
+                        <div class="ui-field" style="flex:2;min-width:200px;margin-bottom:0;">
+                            <label>Search by name</label>
+                            <input class="ui-input" placeholder="callback_reminder…" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ui-stats">
+                    <div class="ui-stat ok"><div class="num">12</div><div class="lbl">Approved</div></div>
+                    <div class="ui-stat warn"><div class="num">3</div><div class="lbl">Pending Meta</div></div>
+                    <div class="ui-stat err"><div class="num">1</div><div class="lbl">Rejected</div></div>
+                    <div class="ui-stat"><div class="num">16</div><div class="lbl">Total · Acme Support</div></div>
+                </div>
+
+                <div class="ui-card">
+                    <div class="ui-card-title"><span>Templates · Acme Support</span><span class="ui-badge info">last sync 30 s ago</span></div>
+                    <table class="ui-table">
+                        <thead><tr><th>Name</th><th>Language</th><th>Category</th><th>Status</th><th>Last action</th><th></th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td><b>callback_reminder_personal</b></td>
+                                <td>en</td>
+                                <td>UTILITY</td>
+                                <td><span class="ui-badge ok">APPROVED</span></td>
+                                <td>2026-04-12 · 1 month ago<br/><span class="ui-chip-row" style="color:#6b7280;">edits used: 1 / 10 this month · next available now</span></td>
+                                <td>
+                                    <button class="ui-btn ui-btn-primary">Edit</button>
+                                    <button class="ui-btn ui-btn-secondary">View</button>
+                                    <button class="ui-btn ui-btn-secondary">+ New version</button>
+                                    <button class="ui-btn ui-btn-secondary">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>callback_reminder_personal_v2</b></td>
+                                <td>en</td>
+                                <td>UTILITY</td>
+                                <td><span class="ui-badge warn">PENDING</span></td>
+                                <td>2026-05-14 · 1 day ago<br/><span class="ui-chip-row" style="color:#6b7280;">edit disabled while pending Meta review</span></td>
+                                <td>
+                                    <button class="ui-btn ui-btn-secondary">View</button>
+                                    <button class="ui-btn ui-btn-secondary">Cancel submission</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>callback_reminder_personal</b></td>
+                                <td>fr</td>
+                                <td>UTILITY</td>
+                                <td><span class="ui-badge ok">APPROVED</span></td>
+                                <td>2026-04-12 · 1 month ago<br/><span class="ui-chip-row" style="color:#92400e;">edits used: 9 / 10 this month · 1 edit left</span></td>
+                                <td>
+                                    <button class="ui-btn ui-btn-primary">Edit</button>
+                                    <button class="ui-btn ui-btn-secondary">View</button>
+                                    <button class="ui-btn ui-btn-secondary">+ New version</button>
+                                    <button class="ui-btn ui-btn-secondary">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>spring_promo_2026</b></td>
+                                <td>en_US</td>
+                                <td>MARKETING</td>
+                                <td><span class="ui-badge err">REJECTED</span></td>
+                                <td>2026-05-11 · 4 days ago · <i>"insufficient sample values"</i></td>
+                                <td>
+                                    <button class="ui-btn ui-btn-secondary">View reason</button>
+                                    <button class="ui-btn ui-btn-primary">Edit</button>
+                                    <button class="ui-btn ui-btn-secondary">+ New version</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><b>otp_login</b></td>
+                                <td>en</td>
+                                <td>AUTHENTICATION</td>
+                                <td><span class="ui-badge warn">PAUSED</span></td>
+                                <td>2026-05-09 · quality drop<br/><span class="ui-chip-row" style="color:#6b7280;">edit available in 18h (24h cooldown · last edit 6h ago)</span></td>
+                                <td>
+                                    <button class="ui-btn ui-btn-secondary" disabled title="On cooldown until 2026-05-16 09:00">Edit (18h)</button>
+                                    <button class="ui-btn ui-btn-secondary">View</button>
+                                    <button class="ui-btn ui-btn-secondary">+ New version</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="ui-chip-row" style="margin-top:8px;color:#6b7280;"><b>Edit</b> covers body / header / footer / buttons changes and is the default. The action is disabled on <code>PENDING</code> (Meta refuses) and during the 24 h cooldown after a previous edit; the button surface labels the wait. <b>+ New version</b> is the fallback for changes Edit refuses — adding or removing a marker, switching language, renaming, or wanting a rollback target.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3>19.4 UI mock — Template editor with live WhatsApp preview</h3>
+    <p style="font-size:13.5px;">One screen shared by all three flows: <b>+ New template</b> (blank, all fields editable), <b>Edit</b> (pre-filled, identity fields locked, marker palette restricted to existing-only re-positioning), and <b>+ New version</b> (pre-filled, identity fields locked, marker palette fully open). The mock below shows Edit mode — the most common flow, and the one with the tightest constraints. A quota banner at the top makes Meta's 24 h cooldown and 10/month limit visible before the operator commits. The right column is a live WhatsApp message preview that re-renders as the operator types.</p>
+
+    <style>
+        .tpl-editor {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 16px;
+        }
+
+        .wa-preview {
+            background: #e5ddd5;
+            border-radius: 8px;
+            padding: 18px;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            align-self: flex-start;
+        }
+
+            .wa-preview .wa-frame-head {
+                background: #128c7e;
+                color: #fff;
+                font-weight: 600;
+                font-size: 12px;
+                padding: 8px 12px;
+                border-radius: 6px 6px 0 0;
+                margin: -18px -18px 14px;
+            }
+
+        .wa-bubble {
+            background: #fff;
+            border-radius: 6px;
+            padding: 8px 10px 6px;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+            position: relative;
+        }
+
+        .wa-media {
+            background: #f0f0f0;
+            border-radius: 4px;
+            height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 11px;
+            margin-bottom: 6px;
+        }
+
+        .wa-body {
+            color: #111;
+            white-space: pre-wrap;
+            font-size: 13px;
+            line-height: 1.35;
+        }
+
+        .wa-placeholder {
+            background: #fff3c4;
+            padding: 0 3px;
+            border-radius: 2px;
+            font-style: italic;
+            color: #92400e;
+        }
+
+        .wa-footer {
+            color: #999;
+            font-size: 11px;
+            margin-top: 6px;
+        }
+
+        .wa-time {
+            color: #b8b8b8;
+            font-size: 10px;
+            text-align: right;
+            margin-top: 2px;
+        }
+
+        .wa-button {
+            display: block;
+            background: #fff;
+            border-top: 1px solid #f0f0f0;
+            margin: 6px -10px -6px;
+            padding: 8px;
+            color: #128c7e;
+            font-weight: 500;
+            text-align: center;
+            font-size: 13px;
+        }
+
+            .wa-button + .wa-button {
+                margin-top: 0;
+            }
+
+        .ph-row {
+            display: grid;
+            grid-template-columns: 70px 1fr;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+            .ph-row .ph-key {
+                background: #fef3c7;
+                color: #92400e;
+                font-family: ui-monospace, monospace;
+                font-size: 11px;
+                padding: 2px 6px;
+                border-radius: 3px;
+                text-align: center;
+            }
+
+        .btn-row {
+            display: grid;
+            grid-template-columns: 160px 1fr auto;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+    </style>
+
+    <div class="ui-frame">
+        <div class="ui-topbar">
+            <div class="brand">Hermes360 · Admin · Templates · Edit <i>spring_promo_2026</i></div>
+            <div class="user">ops@deployer.com</div>
+        </div>
+        <div class="ui-body">
+            <div class="ui-sidebar">
+                <div class="ui-nav-item">⚙ Integration</div>
+                <div class="ui-nav-item">🔌 Providers</div>
+                <div class="ui-nav-item">👥 Customers</div>
+                <div class="ui-nav-item">📞 Numbers</div>
+                <div class="ui-nav-item active">💬 Templates</div>
+                <div class="ui-nav-item">🔔 Webhooks</div>
+            </div>
+            <div class="ui-content">
+                <div class="ui-h">Edit · spring_promo_2026</div>
+                <div class="ui-sub">Submitting returns the template to <code>PENDING</code> for Meta re-review. The currently-approved content stays live for sends throughout the review window — campaigns are not interrupted.</div>
+
+                <!-- Meta quota banner -->
+                <div class="ui-card" style="background:#eff6ff;border-color:#bfdbfe;">
+                    <div class="ui-row">
+                        <span class="label"><b>Meta edit quotas</b></span>
+                        <span class="val" style="font-family:inherit;color:#1e293b;">2 of 10 edits used this month · next reset 2026-06-01</span>
+                    </div>
+                    <div class="ui-row">
+                        <span class="label">Cooldown</span>
+                        <span class="val" style="font-family:inherit;color:#065f46;">last edit 4 days ago · Edit is available now</span>
+                    </div>
+                    <div class="ui-row">
+                        <span class="label">Need to add or remove a marker, rename, or change language?</span>
+                        <span class="val" style="font-family:inherit;"><button class="ui-btn ui-btn-secondary">Switch to + New version</button></span>
+                    </div>
+                </div>
+
+                <div class="tpl-editor">
+
+                    <!-- LEFT · FORM -->
+                    <div>
+
+                        <div class="ui-card">
+                            <div class="ui-card-title"><span>Identity</span><span class="ui-badge info">locked · Meta-immutable</span></div>
+                            <div class="ui-field"><label>Sender</label><input class="ui-input" value="Acme Support · +33 1 23 45 67 89" readonly style="background:#f8fafc;color:#475569;" /></div>
+                            <div class="ui-field"><label>Name</label><input class="ui-input" value="spring_promo_2026" readonly style="background:#f8fafc;color:#475569;" /></div>
+                            <div style="display:flex;gap:10px;">
+                                <div class="ui-field" style="flex:1;"><label>Language</label><input class="ui-input" value="en_US" readonly style="background:#f8fafc;color:#475569;" /></div>
+                                <div class="ui-field" style="flex:1;"><label>Category</label><input class="ui-input" value="MARKETING" readonly style="background:#f8fafc;color:#475569;" /></div>
+                            </div>
+                            <p style="font-size:11px;color:#6b7280;margin:4px 0 0;">Sender, name, language are part of Meta's primary key — never editable. Category has its own dedicated change-category endpoint (separate Meta workflow).</p>
+                        </div>
+
+                        <div class="ui-card">
+                            <div class="ui-card-title"><span>Header <span class="ui-badge">optional</span></span></div>
+                            <div class="ui-field">
+                                <label>Format</label>
+                                <select class="ui-input"><option>None</option><option>TEXT</option><option selected>IMAGE</option><option>VIDEO</option><option>DOCUMENT</option><option>LOCATION</option></select>
+                            </div>
+                            <div class="ui-field">
+                                <label>Sample image URL <span class="ui-chip-row">(required by Meta · used during review only)</span></label>
+                                <input class="ui-input" value="https://cdn.acme.com/promo/spring-banner.png" />
+                            </div>
+                        </div>
+
+                        <div class="ui-card">
+                            <div class="ui-card-title"><span>Body <span class="ui-badge err">required</span></span><span class="ui-chip-row">138 / 1024 chars · 2 markers used</span></div>
+                            <div class="ui-field">
+                                <label>Message text</label>
+                                <textarea class="ui-input" style="min-height:90px;font-family:ui-monospace,monospace;">Hi {phone_display}, your callback is scheduled for {callback_time}. Tap below to confirm or reschedule.</textarea>
+                            </div>
+                            <p class="ui-chip-row" style="margin:4px 0 6px;">Click an <b>in-use</b> chip to re-position it; <b>available</b> chips are disabled in Edit mode because adding a marker requires + New version.</p>
+                            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;">
+                                <span class="ph-key" style="cursor:not-allowed;background:#f1f5f9;color:#94a3b8;font-family:ui-monospace,monospace;font-size:11px;padding:3px 8px;border-radius:3px;" title="Adding a marker requires + New version">+ {phone}</span>
+                                <span class="ph-key" style="cursor:not-allowed;background:#f1f5f9;color:#94a3b8;font-family:ui-monospace,monospace;font-size:11px;padding:3px 8px;border-radius:3px;" title="Adding a marker requires + New version">+ {time}</span>
+                                <span class="ph-key" style="cursor:not-allowed;background:#f1f5f9;color:#94a3b8;font-family:ui-monospace,monospace;font-size:11px;padding:3px 8px;border-radius:3px;" title="Adding a marker requires + New version">+ {date}</span>
+                                <span class="ph-key" style="cursor:not-allowed;background:#f1f5f9;color:#94a3b8;font-family:ui-monospace,monospace;font-size:11px;padding:3px 8px;border-radius:3px;" title="Adding a marker requires + New version">+ {minutes}</span>
+                                <span class="ph-key" style="cursor:pointer;background:#dcfce7;color:#065f46;font-weight:600;font-family:ui-monospace,monospace;font-size:11px;padding:3px 8px;border-radius:3px;" title="In use — click to re-insert at cursor">✓ {callback_time}</span>
+                                <span class="ph-key" style="cursor:pointer;background:#dcfce7;color:#065f46;font-weight:600;font-family:ui-monospace,monospace;font-size:11px;padding:3px 8px;border-radius:3px;" title="In use — click to re-insert at cursor">✓ {phone_display}</span>
+                            </div>
+                            <p style="font-size:11px;color:#6b7280;margin:0;">Green chips = currently in the template. Grey chips would change the marker set, which Meta refuses on Edit — the "Switch to + New version" button at the top is the path for that. Samples shown to Meta are auto-derived from each marker's system sample.</p>
+                        </div>
+
+                        <div class="ui-card">
+                            <div class="ui-card-title"><span>Footer <span class="ui-badge">optional</span></span><span class="ui-chip-row">29 / 60 chars · no placeholders</span></div>
+                            <div class="ui-field" style="margin-bottom:0;"><input class="ui-input" value="Reply STOP to unsubscribe." /></div>
+                        </div>
+
+                        <div class="ui-card">
+                            <div class="ui-card-title"><span>Buttons <span class="ui-badge">optional · up to 10</span></span><button class="ui-btn ui-btn-secondary">+ Add button</button></div>
+
+                            <div class="btn-row">
+                                <select class="ui-input"><option selected>URL</option><option>QUICK_REPLY</option><option>PHONE_NUMBER</option><option>COPY_CODE</option><option>OTP</option></select>
+                                <input class="ui-input" value="Confirm callback" placeholder="Label · max 25 chars" />
+                                <button class="ui-btn ui-btn-secondary" title="Remove">✕</button>
+                            </div>
+                            <div class="ui-field">
+                                <label>URL <span class="ui-chip-row">(may include one trailing marker from the palette — chip-inserted only)</span></label>
+                                <input class="ui-input" value="https://acme.com/cb?ref={phone}" />
+                                <div style="display:flex;gap:6px;margin-top:4px;">
+                                    <span class="ph-key" style="cursor:pointer;background:#dcfce7;color:#065f46;font-weight:600;font-family:ui-monospace,monospace;font-size:11px;padding:2px 6px;border-radius:3px;">✓ {phone}</span>
+                                    <span class="ph-key" style="cursor:pointer;background:#fef3c7;color:#92400e;font-family:ui-monospace,monospace;font-size:11px;padding:2px 6px;border-radius:3px;">+ {callback_time}</span>
+                                </div>
+                                <p style="font-size:11px;color:#6b7280;margin:4px 0 0;">URL example sent to Meta is auto-derived from the marker's sample value — no separate field to fill in.</p>
+                            </div>
+
+                            <div class="btn-row" style="margin-top:10px;">
+                                <select class="ui-input"><option selected>QUICK_REPLY</option><option>URL</option><option>PHONE_NUMBER</option></select>
+                                <input class="ui-input" value="Reschedule" />
+                                <button class="ui-btn ui-btn-secondary" title="Remove">✕</button>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;align-items:center;">
+                            <p style="font-size:11px;color:#6b7280;margin:0 auto 0 0;">Uses 1 of 10 monthly edits · 24 h cooldown starts on submit.</p>
+                            <button class="ui-btn ui-btn-secondary">Cancel</button>
+                            <button class="ui-btn ui-btn-primary">Save edit · returns to PENDING</button>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT · LIVE WHATSAPP PREVIEW -->
+                    <div>
+                        <div class="wa-preview">
+                            <div class="wa-frame-head">Acme Support · WhatsApp Business</div>
+                            <div class="wa-bubble">
+                                <div class="wa-media">📷 spring-banner.png</div>
+                                <div class="wa-body">Hi <span class="wa-placeholder" title="{phone_display}">+33 6 12 34 56 78</span>, your callback is scheduled for <span class="wa-placeholder" title="{callback_time}">Tuesday 17:00</span>. Tap below to confirm or reschedule.</div>
+                                <div class="wa-footer">Reply STOP to unsubscribe.</div>
+                                <div class="wa-time">16:44 ✓✓</div>
+                                <div class="wa-button">↗ Confirm callback</div>
+                                <div class="wa-button">⤺ Reschedule</div>
+                            </div>
+                            <p style="font-size:11px;color:#475569;margin-top:10px;text-align:center;">Live preview — markers render with their <b>system sample values</b> (e.g. <code>{phone_display}</code> → "+33 6 12 34 56 78"). Hover a highlighted token to see which marker it came from.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3>19.5 Edit vs + New version — when to use which</h3>
+    <p style="font-size:13.5px;">Both paths land in the same editor — the difference is what Meta allows to change and what happens to live campaigns during the review window. The decision below is deterministic: if any of the "edit-refused" conditions hold, the Edit button is unavailable (or the editor's switch-mode banner fires) and + New version is the only path.</p>
+    <div class="mermaid">
+        flowchart TB
+        START["Operator wants to change<br/>an existing template"]
+        START --> Q1{"Status is APPROVED,<br/>REJECTED, or PAUSED?"}
+        Q1 -->|"no · PENDING"| WAITP["Wait for Meta review<br/>to finish"]
+        Q1 -->|"no · DISABLED"| ONLYNV["Edit refused · only<br/>New version available"]
+        Q1 -->|"yes"| Q2{"Changing only body, header,<br/>footer, or buttons?"}
+        Q2 -->|"no · need marker change,<br/>rename, language, or rollback"| NV["New version<br/>same flow as Create"]
+        Q2 -->|"yes"| Q3{"24h cooldown elapsed<br/>and under 10 edits this month?"}
+        Q3 -->|"no"| QUOTA["Edit unavailable<br/>quota or cooldown banner"]
+        Q3 -->|"yes"| ED["Edit<br/>· same form, identity locked<br/>· marker-add chips disabled"]
+        ED --> SUB["Submit → status PENDING<br/>· previously approved content<br/>stays sendable during review"]
+        SUB --> AP1{"Approved?"}
+        AP1 -->|"yes"| LIVE["Status APPROVED<br/>new content is now live"]
+        AP1 -->|"no"| REJ["Status REJECTED<br/>· previously approved content<br/>still serves sends · operator iterates"]
+        NV --> NSUB["Submit · new template<br/>created · status PENDING"]
+        NSUB --> NAP{"Approved?"}
+        NAP -->|"yes"| NLIVE["Both versions sendable<br/>banner prompts to retire parent"]
+        NAP -->|"no"| NREJ["Rejected · operator iterates"]
+        NLIVE --> RETIRE["Operator confirms<br/>parent template deleted"]
+        style START fill:#e3f2fd
+        style ED fill:#d1fae5
+        style SUB fill:#fef3c7
+        style LIVE fill:#d1fae5
+        style REJ fill:#fee2e2
+        style NV fill:#fff3e0
+        style NLIVE fill:#fce4ec,stroke:#e2336b,stroke-width:2px
+        style RETIRE fill:#eef2f7
+        style WAITP fill:#fef3c7
+        style ONLYNV fill:#fee2e2
+        style QUOTA fill:#fff7ed
+    </div>
+
+    <div class="note"><b>Edit never needs a retirement step.</b> Meta keeps the previously-approved content live for sends while the edit is under review — campaigns that picked the template in §18.5 continue to work, and "snap" to the new content the moment Meta approves it. <b>+ New version</b> is the path that does need retirement, because it produces a separate template under a different name; both versions stay sendable until the operator confirms the retirement of the parent. Hermes never deletes a parent before the new version is approved.</div>
+
+    <h3>19.6 Acceptance — what "done" looks like</h3>
+    <div class="status-grid">
+        <div class="pill done"><b>Edit is the primary action</b> on <code>APPROVED</code>, <code>REJECTED</code>, and <code>PAUSED</code> rows — covers body / header / footer / buttons changes without interrupting live campaigns.</div>
+        <div class="pill done"><b>Edit is disabled with explanatory labels</b> on <code>PENDING</code> rows (Meta refuses) and during the 24 h cooldown (button label shows "Edit (Xh)").</div>
+        <div class="pill done"><b>Meta quotas surfaced</b> "edits used: N / 10 this month" on each row + a banner in the editor before submit; high-usage rows (≥ 9/10) flagged.</div>
+        <div class="pill done"><b>Edit-mode marker palette</b> "add" chips disabled (would change the marker set); only in-use chips clickable for re-positioning. The editor offers a one-click switch to + New version when the operator needs to change the marker set.</div>
+        <div class="pill done"><b>+ New version is the fallback</b> for changes Edit refuses — adding/removing markers, renaming, switching language, or keeping the old as a rollback target.</div>
+        <div class="pill done"><b>Identity fields locked always</b> sender, name, language are part of Meta's primary key — never editable in either flow. Category has its own dedicated change-category endpoint.</div>
+        <div class="pill done"><b>Fixed marker palette</b> the only placeholders the operator can insert are the six shared with §18 (<code>{phone}</code>, <code>{time}</code>, <code>{date}</code>, <code>{minutes}</code>, <code>{callback_time}</code>, <code>{phone_display}</code>) — chip-inserted, never typed.</div>
+        <div class="pill done"><b>No example/sample inputs</b> Meta's required samples are auto-derived from each marker's system-wide sample value.</div>
+        <div class="pill done"><b>Live WhatsApp preview</b> updates as the form is edited; markers render with their system sample values.</div>
+        <div class="pill done"><b>Type-conditional button fields</b> URL fields show only when type = URL, OTP fields only when type = OTP, etc.</div>
+        <div class="pill done"><b>Retirement is gated on approval — for + New version only</b> Edit never produces a parent to retire; New version banners prompt the operator to delete the parent only after the new version reaches <code>APPROVED</code>.</div>
+        <div class="pill partial"><b>Per-language version trees</b> grouping versions of the same logical template across languages — follow-up after first ship.</div>
+    </div>
+
+
+    <script>
+        if (window.mermaid) {
+            mermaid.initialize({ startOnLoad: true, theme: 'default' });
+        }
+    </script>
+
+</body>
+</html>
