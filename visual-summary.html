@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hermes360 ↔ Infobip — Visual Summary</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 32px 40px 80px;
+    color: #1a1a1a;
+    background: #fafafa;
+    line-height: 1.5;
+  }
+  h1 {
+    font-size: 28px;
+    border-bottom: 3px solid #e2336b;
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+  }
+  h2 {
+    font-size: 20px;
+    color: #e2336b;
+    margin-top: 38px;
+    border-left: 4px solid #e2336b;
+    padding-left: 10px;
+  }
+  h3 { font-size: 15px; color: #555; margin-top: 18px; }
+  .subtitle { color: #666; font-size: 14px; margin-bottom: 24px; }
+  .mermaid {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 18px;
+    margin: 14px 0;
+    text-align: center;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    background: #fff;
+    font-size: 13.5px;
+  }
+  th, td {
+    border: 1px solid #d8d8d8;
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #f3f3f3; font-weight: 600; }
+  tr:nth-child(even) td { background: #fafafa; }
+  code {
+    background: #f0f0f0;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12.5px;
+    color: #c0265d;
+  }
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 12px 0;
+  }
+  .pill {
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13.5px;
+    border-left: 4px solid;
+    background: #fff;
+  }
+  .pill.done    { border-color: #2ea043; }
+  .pill.partial { border-color: #d4a72c; }
+  .pill.todo    { border-color: #cf222e; }
+  .pill b { display: block; margin-bottom: 2px; }
+  .note {
+    background: #e8f5e9;
+    border-left: 4px solid #2ea043;
+    padding: 10px 14px;
+    margin: 10px 0;
+    border-radius: 4px;
+    font-size: 13.5px;
+  }
+  .legend {
+    display: inline-block;
+    margin-right: 14px;
+    font-size: 12.5px;
+  }
+  .dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+    <h1>Hermes360 ↔ Infobip — Visual Summary</h1>
+    <p class="subtitle">Integration Layer · CPaaS-X · Speed2Lead first</p>
+
+    <h2>1. The Big Picture</h2>
+    <div class="mermaid">
+mindmap
+  root((Hermes360 ↔ Infobip))
+    Deployment
+      Deployer owns Infobip subscription
+      Per-deployment base URL and API key
+    Mapping
+      Use case → Application
+      Customer → Entity
+      Campaign → campaignReferenceId
+      Send → bulkId + messageId
+    Channels
+      WhatsApp
+      SMS / MMS
+      RCS
+      Email
+    APIs
+      Entities / Applications
+      Messages
+      Resources
+      Subscriptions
+      WhatsApp Templates
+    </div>
+
+    <h2>2. Deployment Topology</h2>
+    <div class="mermaid">
+        flowchart LR
+        D[Deployer Org] -->|owns| IBA[(Infobip Account)]
+        D -->|installs| H[Hermes360]
+        H -->|uses API key| IBA
+        H --> C1[Customer A]
+        H --> C2[Customer B]
+        H --> C3[Customer N]
+        C1 -.->|1:1 entity| IBA
+        C2 -.->|1:1 entity| IBA
+        C3 -.->|1:1 entity| IBA
+        style D fill:#e3f2fd
+        style H fill:#fff3e0
+        style IBA fill:#fce4ec
+    </div>
+
+    <h2>3. Core Mapping — Hermes ↔ Infobip</h2>
+    <table>
+        <thead>
+            <tr><th>Hermes360</th><th>Infobip Primitive</th><th>Cardinality</th><th>Wire field</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Hermes Use case (Speed2Lead…)</td><td><code>applicationId</code></td><td>1 per use case</td><td><code>applicationName</code></td></tr>
+            <tr><td>Hermes Customer (tenant)</td><td><code>entityId</code></td><td>1 per customer (eager)</td><td><code>entityName</code></td></tr>
+            <tr><td>Hermes Campaign</td><td><code>campaignReferenceId</code></td><td>1 per campaign</td><td>—</td></tr>
+            <tr><td>Send batch</td><td><code>bulkId</code></td><td>1 per batch</td><td>—</td></tr>
+            <tr><td>ContactAttempt</td><td><code>messageId</code></td><td>1 per send (idempotency)</td><td>—</td></tr>
+        </tbody>
+    </table>
+
+    <h2>4. Setup Flow — Application &amp; Entity Creation</h2>
+    <p style="font-size:13.5px;">Provisioning is <b>self-healing on service startup</b>: every time <code>HermesMessaging.ApiService</code> boots, it runs a hosted reconciliation job that ensures (a) every Hermes use case has its Infobip Application, and (b) every Hermes Customer has its Infobip Entity. After startup, new customers get their Entity created <b>eagerly at customer creation time</b>. Nothing is "installed" — operators never have to run a bootstrap command.</p>
+
+    <h3>4.1 Application reconciliation — runs on every service start</h3>
+    <div class="mermaid">
+        sequenceDiagram
+        participant Host as ApiService Host (startup)
+        participant Job as ApplicationReconciliationHostedService
+        participant IB as Infobip /provisioning/1/applications
+        Host->>Job: StartAsync (on boot, before traffic)
+        loop for each configured use case (e.g. speed2lead)
+        Job->>IB: GET /provisioning/1/applications/{applicationId}
+        alt Application exists
+        IB-->>Job: 200 application
+        Note right of Job: mark provisioned in InfobipApplication row
+        else Application missing
+        IB-->>Job: 404
+        Job->>IB: POST /provisioning/1/applications<br />{ applicationId, applicationName }
+        IB-->>Job: 201 created
+        end
+        end
+        Job-->>Host: ready — service starts accepting traffic
+        Note over Host,IB: Idempotent · safe on every boot.<br />No operator action required.
+    </div>
+
+    <h3>4.2 Entity reconciliation on startup + eager creation thereafter</h3>
+    <p style="font-size:13.5px;">Same hosted-service pattern, two phases. On boot, the reconciler scans the Hermes <code>Customer</code> table and creates an Entity for any customer that doesn't yet have one in <code>InfobipCustomerMapping</code> in <code>provisioned</code> state. After startup, the normal customer-creation path creates the Entity inline — the reconciler exists to heal drift, not to be the primary path.</p>
+    <div class="mermaid">
+        sequenceDiagram
+        participant Host as ApiService Host (startup)
+        participant Job as EntityReconciliationHostedService
+        participant DB as Hermes DB
+        participant IB as Infobip /provisioning/1/entities
+        Host->>Job: StartAsync (on boot, after §4.1)
+        Job->>DB: SELECT customers WHERE no provisioned Entity
+        loop for each missing entity
+        Job->>IB: POST /provisioning/1/entities<br />{ entityId = CustomerId, entityName }
+        IB-->>Job: 201 created
+        Job->>IB: GET /provisioning/1/entities/{entityId}
+        IB-->>Job: read-back (confirm entityName not null)
+        Job->>DB: upsert InfobipCustomerMapping (provisioned)
+        end
+        Job-->>Host: ready
+    </div>
+    <div class="mermaid">
+        sequenceDiagram
+        participant H as Hermes Customer Lifecycle
+        participant API as HermesMessaging.ApiService
+        participant IB as Infobip /provisioning/1/entities
+        Note over H,IB: After startup — eager path for any new customer
+        H->>API: Customer created (CustomerId, Name)
+        API->>IB: POST /provisioning/1/entities<br />{ entityId = CustomerId, entityName = Name }
+        IB-->>API: 201 created
+        API->>IB: GET /provisioning/1/entities/{entityId}
+        IB-->>API: read-back: confirm entityName not null
+        API-->>H: customer provisioned end-to-end
+        Note over H,IB: Zero traffic = zero billing.<br />Decouples identity from product.
+    </div>
+
+    <div class="note"><b>Order on boot:</b> §4.1 (Applications) runs before §4.2 (Entities) — an Entity may reference an Application context for downstream binding, and Resource Associations require both. The hosted service is ordered explicitly via DI registration.<br><b>Drift recovery:</b> if Infobip drops an Application or Entity (e.g. manual cleanup, account migration), the next service restart re-creates it; no manual intervention.<br><b>Order matters at send time:</b> the Application must exist before any outbound send tags <code>applicationId</code>; the Entity must exist before any send tags <code>entityId</code> or any number is associated to that customer.</div>
+
+    <h2>5. Number Enrollment — Bringing the Customer's MSISDN via Meta Embedded Signup</h2>
+    <p style="font-size:13.5px;">With the Application (<b>§4.1</b>) and Entity (<b>§4.2</b>) in place, the next prerequisite before any send is a <b>sender number</b>. Hermes does <b>not</b> lease numbers from Infobip's pool — the customer brings their own MSISDN. For WhatsApp specifically, Hermes onboards each tenant's number through <b>Meta's Embedded Signup (ES)</b> flow, accessed via Infobip's <b>Tech Provider Program (TPP)</b>. Hermes registers as a Tech Provider with Meta, hosts its own ES UI (using Meta's Facebook JS SDK), launches ES against Infobip's <code>solutionId</code>, and after the tenant completes ES, Hermes hands the captured <code>wabaId</code> off to Infobip via <code>POST /whatsapp/1/embedded-signup/registrations/share-waba</code>. Under TPP, Infobip's "Automatic Resource Association" feature auto-creates the matching <code>entityId</code> for the tenant's Business Manager ID during ES, so Hermes never drives Resource Association explicitly for WhatsApp.</p>
+
+    <div class="mermaid">
+        flowchart TB
+        T["Customer brings own MSISDN"] --> R1
+        subgraph Hermes
+        R1["POST /api/Numbers/register<br />(launches ES UI)"]
+        ESUI["Hermes-hosted ES widget<br />(Meta Facebook JS SDK)"]
+        R2["POST /api/Numbers/{wabaId}/share-waba"]
+        L["GET /api/Numbers?entityId=...<br />(local DB — TODO)"]
+        WH["Webhook receiver<br />(registration status)"]
+        end
+        subgraph Meta
+        ES["Meta Embedded Signup<br />tenant's Facebook Business Manager"]
+        end
+        subgraph Infobip
+        A1["Share WABA<br />POST /whatsapp/1/embedded-signup/registrations/share-waba"]
+        end
+        R1 --> ESUI
+        ESUI -->|"tenant completes ES"| ES
+        ES -->|"wabaId + phoneNumberId callback"| R2
+        R2 --> A1
+        A1 -.->|"IN_PROGRESS / FAILED / FINISHED"| WH
+        WH -.->|"populates mapping table"| L
+        style T fill:#e8f5e9
+        style ESUI fill:#fff3e0
+        style ES fill:#dbeafe
+        style WH fill:#fce4ec
+    </div>
+    <div class="note" style="background:#fff3e0;border-left-color:#d4a72c;"><b>Out of frame:</b> an admin-only <code>GET /api/admin/numbers/inventory</code> endpoint calls Infobip Resource Management (<code>GET /resource/1/resources</code>) for reconciliation / audit. It is the only remaining Hermes → Resource Management call after the 2026-05-18 refactor and sits outside the tenant onboarding path — not shown here so the flowchart stays focused on tenant ES.</div>
+    <div class="note"><b>Why ES, not Resource Request?</b> Infobip's Resource Request API is reserved for purchasing numbers from Infobip's pool, alphanumeric sender registration, and launching RCS agents — it does <b>not</b> handle WhatsApp onboarding. WhatsApp onboarding runs over Meta's Embedded Signup flow, surfaced to tenants through Infobip's Tech Provider Program. Hermes captures <code>wabaId</code> and <code>phoneNumberId</code> from the ES callback and forwards them via <code>share-waba</code>; completion is reported asynchronously through a webhook (<code>IN_PROGRESS</code> → <code>FINISHED</code>, or <code>FAILED</code>). The webhook URL is given to Infobip's account manager.</div>
+
+    <h3>5.1 Infobip APIs Hermes calls for Numbers</h3>
+    <table>
+        <thead>
+            <tr><th>Purpose</th><th>Infobip API</th><th>Endpoint</th><th>Hermes endpoint</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Admin reconciliation / audit (out of tenant onboarding flow)</td><td>Resource Management</td><td><code>GET /resource/1/resources</code></td><td><code>GET /api/admin/numbers/inventory</code></td></tr>
+            <tr><td>WhatsApp onboarding handoff (post-ES)</td><td>Embedded Signup · share WABA</td><td><code>POST /whatsapp/1/embedded-signup/registrations/share-waba</code></td><td><code>POST /api/Numbers/register</code></td></tr>
+            <tr><td>Registration completion</td><td>Webhook (ES status)</td><td><code>POST {hermes-webhook-url}</code> · payload: <code>businessAccountId</code>, per-sender <code>phoneNumberId</code> + <code>displayPhoneNumber</code> + <code>status</code>, <code>businessPortfolioId</code></td><td>(inbound) Hermes webhook receiver</td></tr>
+        </tbody>
+    </table>
+    <p style="font-size:13px;color:#666;"><b>⚠</b> Legacy <code>/numbers/1/numbers</code> ignores <code>entityId</code> — do NOT use for tenant filtering. Resource Association is also <b>not</b> driven explicitly by Hermes for WhatsApp: Infobip's Automatic Resource Association auto-creates the entityId match during ES.</p>
+
+    <h2>6. Resources vs Subscriptions — Complementary, Not Alternative</h2>
+    <p style="font-size:13.5px;">Before we look at the send pipeline, it is worth pausing on a distinction that is easy to confuse: <b>Resource</b> vs <b>Subscription</b>. Everything we just built in <b>§4</b> and <b>§5</b> (Application, Entity, Number) lives in the <b>Resource layer</b> — assets that <i>exist</i> in the Infobip account. A Subscription is a different object entirely: a <b>routing rule</b> for inbound events. The two are <b>complementary</b>, not alternatives, and the distinction maps directly to the direction of traffic:</p>
+
+    <p style="font-size:13.5px;margin-top:8px;"><b>Outbound (MT) only needs Resources.</b> <b>Inbound (MO) needs Resources <i>plus</i> a Subscription per channel.</b> Because the current phase is outbound-only, the entire §7 / §8 send pipeline below works on Resources alone — no Subscription object needs to exist.</p>
+
+    <div class="mermaid">
+        flowchart LR
+        subgraph RL["Resource layer — what exists"]
+        R1["Number (MSISDN)"]
+        R2["Sender ID"]
+        R3["Entity / Application"]
+        end
+        subgraph SL["Subscription layer — routing on top"]
+        S1["SMS inbound (MO)<br />→ webhook"]
+        S2["WhatsApp inbound (MO)<br />→ webhook"]
+        S3["Account-wide DLR (optional)<br />→ webhook"]
+        end
+        R1 -.->|asset bound to| R3
+        R1 ==>|required for MO| S1
+        R1 ==>|required for MO| S2
+        R1 -.->|optional| S3
+        style RL fill:#e3f2fd
+        style SL fill:#fff3e0
+    </div>
+
+    <table>
+        <thead><tr><th>Concept</th><th>Resource</th><th>Subscription</th></tr></thead>
+        <tbody>
+            <tr><td>What it is</td><td>An asset that <b>exists</b> in your Infobip account (number, sender, entity, application)</td><td>A <b>routing rule</b> — "when something happens on this asset, POST it to my webhook"</td></tr>
+            <tr><td>Lifecycle</td><td>Created once at enrollment / provisioning</td><td>Created per channel, per receiver; criteria editable for routing changes</td></tr>
+            <tr><td>Infobip API</td><td><code>/resource/1/*</code> + <code>/provisioning/1/*</code></td><td><code>/subscriptions/1/subscription/{channel}</code></td></tr>
+            <tr><td>Needed for <b>outbound (MT)</b>?</td><td><b>Yes</b> — the sender must exist as a Resource</td><td><b>No</b> — DLR can be requested per-send via <code>notifyUrl</code></td></tr>
+            <tr><td>Needed for <b>inbound (MO)</b>?</td><td><b>Yes</b> — number must exist and be channel-enabled</td><td><b>Yes</b> — without it, Infobip has nowhere to push the MO</td></tr>
+            <tr><td>Mental model</td><td>The phone line plugged into the wall</td><td>The answering-machine forwarding rule on top</td></tr>
+        </tbody>
+    </table>
+
+    <h3>6.1 What this means for the current phase (outbound-only)</h3>
+    <div class="note"><b>Subscriptions are NOT required to send.</b> The outbound pipeline in <b>§7 / §8</b> only needs the Resource layer in place: an Application (§4.1), an Entity (§4.2), and a sender number (§5). Delivery reports come back through the per-send <code>notifyUrl</code> on each message — no pre-created subscription object needed for the verified outbound roundtrip.<br><br><b>Subscriptions become mandatory in Phase 3</b> (inbound + webhooks). They are configured <b>per channel</b>: one SMS-MO subscription and one WhatsApp-MO subscription on the same number are two independent objects.</div>
+
+    <h3>6.2 "Subscription" — disambiguating two meanings in Infobip docs</h3>
+    <table>
+        <thead><tr><th>Sense</th><th>Meaning</th><th>Applies to Hermes?</th></tr></thead>
+        <tbody>
+            <tr><td><b>Forwarding subscription</b> (this section)</td><td>Webhook routing config for inbound events (MO, DLR push)</td><td><b>Yes</b> — needed for MO in Phase 3 (see §12)</td></tr>
+        </tbody>
+    </table>
+
+    <h2>7. Outbound Send — Free-Form WhatsApp (24 h session)</h2>
+    <p style="font-size:13.5px;">All four prerequisites are now in place: <b>Application</b> (§4.1), <b>Entity</b> (§4.2), <b>enrolled Number</b> (§5), and the conceptual model (§6 — Resources only, no Subscription). The simplest send is a free-form WhatsApp text — works only when the recipient has messaged the customer's WhatsApp number in the last 24 h.</p>
+    <div class="mermaid">
+        sequenceDiagram
+        participant App as Hermes App
+        participant API as HermesMessaging.ApiService
+        participant IB as Infobip Messages API
+        participant DLR as Reports queue
+        App->>API: POST /api/Speed2Lead/Messages/whatsapp/text
+        API->>IB: POST /messages-api/1/messages<br />(applicationId, entityId,<br />campaignReferenceId, sender,<br />content.body.text)
+        IB-->>API: 200 bulkId + messageId<br />PENDING_ACCEPTED
+        API-->>App: 200 ack
+        Note over IB,DLR: ~30–120 s later
+        IB->>DLR: DLR produced
+        API->>DLR: GET /messages-api/1/reports?bulkId
+        DLR-->>API: status.groupName, error,<br />platform.entityId, campaignReferenceId
+    </div>
+    <div class="note"><b>24-hour session rule:</b> free-form text only works if the recipient messaged the customer's WhatsApp number in the last 24 h. Otherwise → <code>EC_NO_SESSION</code> permanent failure → must use a template (next section).</div>
+    <div class="note" style="background:#e3f2fd;border-left-color:#1e40af;"><b>No subscription required for outbound.</b> The send path only needs the Resource layer (Application + Entity + sender). DLRs are requested per-send via <code>notifyUrl</code> in the payload — no pre-created subscription object. See <b>§6</b> for the Resource vs Subscription distinction.</div>
+
+    <h2>8. Outbound Send — WhatsApp Template (most important for us)</h2>
+    <p style="font-size:13.5px;">Outside the 24 h session window, Meta requires an <b>approved template</b>. This is a two-phase flow: a one-off registration / approval step, then an unlimited number of sends referencing the approved template name.</p>
+    <div class="mermaid">
+        sequenceDiagram
+        participant App as Hermes App
+        participant API as HermesMessaging.ApiService
+        participant Tpl as WhatsappTemplatesController
+        participant IB as Infobip
+        rect rgb(232, 245, 233)
+        Note over App,IB: One-off — register the template with Meta
+        App->>API: POST /api/WhatsappTemplates/{sender}<br />{ name, language, category, structure }
+        API->>IB: POST /whatsapp/2/senders/{sender}/templates
+        IB-->>API: 201 PENDING_APPROVAL
+        Note over IB: Meta reviews — minutes to days
+        API->>Tpl: GET status
+        Tpl->>IB: GET /whatsapp/2/senders/{sender}/templates
+        IB-->>API: APPROVED
+        end
+        rect rgb(255, 243, 224)
+        Note over App,IB: Send — uses approved template name
+        App->>API: POST /api/Speed2Lead/Messages/whatsapp/template<br />{ to, templateName, language,<br />  bodyParams[], buttonParams[] }
+        API->>IB: POST /messages-api/1/messages<br />messages[0].template = {<br />  templateName, language,<br />  templateData.body.placeholders }
+        IB-->>API: 200 bulkId + messageId
+        API->>IB: GET /messages-api/1/reports?bulkId
+        IB-->>API: DELIVERED / FAILED
+        end
+    </div>
+    <h3>8.1 Template payload shape (Messages API)</h3>
+    <table>
+        <thead><tr><th>Field</th><th>Purpose</th></tr></thead>
+        <tbody>
+            <tr><td><code>messages[].template.templateName</code></td><td>Meta-approved name (e.g. <code>welcome_message</code>)</td></tr>
+            <tr><td><code>messages[].template.language</code></td><td>e.g. <code>en</code>, <code>fr</code> — must match an approved variant</td></tr>
+            <tr><td><code>messages[].template.templateData.body.placeholders[]</code></td><td>Ordered string array filling <code>{{1}}</code>, <code>{{2}}</code>, …</td></tr>
+            <tr><td><code>messages[].template.templateData.header</code></td><td>Image/Doc/Video header (when template uses one)</td></tr>
+            <tr><td><code>messages[].template.templateData.buttons[]</code></td><td>Quick-reply / URL button params (per approved structure)</td></tr>
+            <tr><td><code>messages[].channel = "WHATSAPP"</code></td><td>Required</td></tr>
+        </tbody>
+    </table>
+    <div class="note"><b>Status is Meta-controlled.</b> Hermes can read template status but cannot force approval — <code>PENDING_APPROVAL → APPROVED → REJECTED / DISABLED</code> are emitted by Meta. A campaign that depends on a template must verify <code>APPROVED</code> before launch.</div>
+
+    <h2>9. Controllers — Current Layout</h2>
+    <div class="mermaid">
+        flowchart TB
+        Base["MessagesControllerBase (abstract)<br />━━━━━━━━━━━━━━<br />protected abstract ApplicationId<br />POST send<br />POST whatsapp/text<br />POST whatsapp/template"]
+        S2L["Speed2LeadMessagesController<br />━━━━━━━━━━━━━━<br />Route: api/Speed2Lead/Messages<br />ApplicationId = options.Speed2LeadApplicationId"]
+        Future["FutureUseCaseMessagesController<br />━━━━━━━━━━━━━━<br />Route: api/{UseCase}/Messages<br />ApplicationId = options.{UseCase}ApplicationId"]
+        S2L -->|inherits| Base
+        Future -.->|inherits| Base
+        style Base fill:#fff3e0,stroke:#e2336b,stroke-width:2px
+        style S2L fill:#e8f5e9
+        style Future fill:#f5f5f5,stroke-dasharray: 5 5
+    </div>
+    <table>
+        <thead>
+            <tr><th>Controller</th><th>Route</th><th>Infobip endpoint</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>ApplicationsController</code></td><td><code>/api/Applications</code></td><td><code>/provisioning/1/applications</code></td><td>Use case reconciliation passthrough (idempotent · invoked by the startup hosted service in §4.1, also exposed for admin re-runs)</td></tr>
+            <tr><td><code>EntitiesController</code></td><td><code>/api/Entities</code></td><td><code>/provisioning/1/entities</code></td><td>Customer ↔ Entity (1:1) · used by both the startup reconciler (§4.2) and the eager customer-creation path</td></tr>
+            <tr><td><code>MessagesControllerBase</code> <i>(abstract)</i></td><td>—</td><td><code>/messages-api/1/messages</code></td><td>Shared send pipeline: <code>send</code>, <code>whatsapp/text</code>, <code>whatsapp/template</code></td></tr>
+            <tr><td><code>Speed2LeadMessagesController</code></td><td><code>/api/Speed2Lead/Messages</code></td><td>(inherits)</td><td>Speed2Lead use case — stamps <code>applicationId = speed2lead</code></td></tr>
+            <tr><td><code>SubscriptionsController</code></td><td><code>/api/Subscriptions</code></td><td><code>/subscriptions/1/subscription/{channel}</code></td><td>Per-channel webhook routing</td></tr>
+            <tr><td><code>WhatsappTemplatesController</code></td><td><code>/api/WhatsappTemplates</code></td><td><code>/whatsapp/2/senders/{sender}/templates</code></td><td>WA template CRUD (status read-only)</td></tr>
+            <tr><td><code>NumbersController</code></td><td><code>/api/Numbers</code></td><td>Embedded Signup (tenant onboarding) + local DB reads (queries)</td><td>Tenant-facing reads (TODO — local DB) + ES handoff (on a sibling ES controller)</td></tr>
+            <tr><td><code>AdminNumbersController</code></td><td><code>/api/admin/numbers</code></td><td><code>/resource/1/resources</code></td><td>Single remaining Hermes → Resource Management call. Admin-only. Reconciliation / audit, not on the tenant onboarding path.</td></tr>
+        </tbody>
+    </table>
+    <h3>NumbersController — explicit Infobip surface</h3>
+    <table>
+        <thead><tr><th>Hermes endpoint</th><th>Infobip endpoint</th><th>Infobip API name</th></tr></thead>
+        <tbody>
+            <tr><td><code>GET /api/Numbers</code></td><td>local DB (populated by ES webhook) — <b>TODO until local table lands</b></td><td>n/a — no Infobip call on this path</td></tr>
+            <tr><td><code>GET /api/Numbers?entityId={id}</code></td><td>local DB filtered by <code>entityId</code> — <b>TODO until local table lands</b></td><td>n/a — no Infobip call on this path</td></tr>
+            <tr><td><code>POST /api/Numbers/register</code></td><td>Launches Hermes-hosted ES widget; on ES callback, calls <code>POST /whatsapp/1/embedded-signup/registrations/share-waba</code></td><td>Embedded Signup · share WABA</td></tr>
+            <tr><td>(inbound) <code>POST /api/Webhooks/embedded-signup</code></td><td>—</td><td>Webhook receiver for ES status (<code>IN_PROGRESS</code> / <code>FAILED</code> / <code>FINISHED</code>) — also populates the local mapping table that the <code>GET</code> endpoints read from</td></tr>
+            <tr><td><code>GET /api/admin/numbers/inventory</code> <i>(admin-only)</i></td><td><code>GET /resource/1/resources</code></td><td>Resource Management — reconciliation / audit only. Lives on <code>AdminNumbersController</code>, not <code>NumbersController</code>.</td></tr>
+        </tbody>
+    </table>
+
+    <h2>10. Proposed MSSQL Tables</h2>
+    <p style="font-size:13.5px;">All passthrough today — no DB persistence in Hermes. Existing <code>Customer</code> table stays untouched. <b>Infobip connection settings (<code>BaseUrl</code>, <code>ApiKey</code>) stay in <code>appsettings.json</code></b> — moving them to the DB would require runtime decryption on every send, with no upside given a single per-deployment key. The <code>InfobipConfiguration</code> table below stores only <b>observed/derived state</b> (health-check results, fingerprints, sync metadata), never the secret itself.</p>
+    <p style="font-size:13.5px;"><b>Naming convention:</b> every Infobip-related table uses the <code>Infobip</code> prefix (PascalCase in SQL/EF, <code>INFOBIP_</code> in the ER diagram below). This keeps the integration layer cleanly grouped and easy to grep.</p>
+    <div class="mermaid">
+        erDiagram
+        INFOBIP_CONFIGURATION ||--o{ INFOBIP_APPLICATION : "applies to"
+        INFOBIP_CUSTOMER_MAPPING ||--o{ INFOBIP_PHONE_NUMBER : owns_via_customer
+        INFOBIP_PHONE_NUMBER ||--o{ INFOBIP_PROVISIONING_JOB : tracked_by
+        INFOBIP_APPLICATION ||--o{ INFOBIP_PROVISIONING_JOB : context
+        INFOBIP_APPLICATION ||--o{ INFOBIP_MESSAGE_DISPATCH : "use case context"
+        INFOBIP_CUSTOMER_MAPPING ||--o{ INFOBIP_MESSAGE_DISPATCH : "sent on behalf of"
+        INFOBIP_MESSAGE_DISPATCH ||--o| INFOBIP_MESSAGE_DISPATCH : "retry_of (self FK)"
+        INFOBIP_CONFIGURATION {
+        int Id PK
+        string BaseUrl
+        string ApiKeyFingerprint "last 4 chars / SHA-256 prefix — never the key"
+        string Environment "production / staging / sandbox"
+        string HealthStatus "Healthy / Degraded / Unhealthy / Unknown"
+        datetime LastHealthCheckAt
+        int LastHealthCheckLatencyMs
+        string LastHealthCheckEndpoint "TBD — generic Infobip health endpoint (e.g. GET /account/1/account)"
+        int LastHealthCheckHttpStatus
+        datetime LastSuccessfulHealthCheckAt
+        string LastError
+        int ConsecutiveFailures
+        int HealthCheckIntervalSec
+        bool IsEnabled
+        datetime CreatedAt
+        datetime UpdatedAt
+        }
+        INFOBIP_APPLICATION {
+        int Id PK
+        string ApplicationId "Infobip applicationId"
+        string ApplicationName "e.g. Speed2Lead"
+        string UseCase "Hermes use case key"
+        string Description
+        string DefaultChannel "WhatsApp / SMS / RCS / Voice"
+        string Status "Active / Inactive / Disabled"
+        bool IsDefault "default app for this use case"
+        string CallbackUrl
+        datetime LastSyncAt
+        string LastError
+        datetime CreatedAt
+        datetime UpdatedAt
+        }
+        INFOBIP_CUSTOMER_MAPPING {
+        int Id PK
+        int CustomerId FK
+        string InfobipEntityId
+        string InfobipEntityName
+        string ProvisioningState
+        datetime ProvisionedAt
+        datetime LastSyncAt
+        string LastError
+        datetime CreatedAt
+        datetime UpdatedAt
+        }
+        INFOBIP_PHONE_NUMBER {
+        int Id PK
+        int CustomerId FK
+        string Number_E164
+        string Channel
+        string Country_ISO2
+        string InfobipNumberKey
+        string InfobipWabaId "WhatsApp Business Account ID returned from Embedded Signup"
+        string InfobipPhoneNumberId "phoneNumberId returned from ES (per-sender)"
+        string RegistrationState
+        datetime RegisteredAt
+        datetime LastSyncedAt
+        string Metadata_Json
+        datetime CreatedAt
+        datetime UpdatedAt
+        }
+        INFOBIP_PROVISIONING_JOB {
+        int Id PK
+        string ResourceType
+        string ResourceId
+        string Action
+        string State
+        int Attempts
+        string LastError
+        datetime LastAttemptAt
+        datetime CreatedAt
+        datetime UpdatedAt
+        }
+        INFOBIP_MESSAGE_DISPATCH {
+        int Id PK
+        string MessageId "Infobip messageId — unique"
+        string BulkId "Infobip bulkId — indexed"
+        string Destination "to (MSISDN / WA business id / email)"
+        int CustomerId FK "Hermes tenant"
+        string InfobipApplicationId
+        string InfobipEntityId
+        string CampaignReferenceId
+        string Channel "WHATSAPP / SMS / RCS / VIBER / ..."
+        string Sender
+        int LatestStatusGroupId
+        string LatestStatusGroupName "PENDING / DELIVERED / UNDELIVERABLE / EXPIRED / REJECTED"
+        int LatestStatusId
+        string LatestStatusName
+        string LatestStatusDescription
+        string LatestErrorGroupName
+        string LatestErrorName
+        bool LatestErrorIsPermanent
+        string CorrelationData
+        string CallbackData
+        int RetryCount
+        string RetryOfMessageId "self-FK — previous attempt"
+        datetime SentAt
+        datetime LastStatusRefreshAt
+        datetime DeliveredAt
+        datetime FinalizedAt
+        datetime CreatedAt
+        datetime UpdatedAt
+        }
+    </div>
+
+    <table>
+        <thead><tr><th>Table</th><th>Purpose</th><th>Key columns</th></tr></thead>
+        <tbody>
+            <tr><td><code>InfobipConfiguration</code> <b>(new — health &amp; runtime state)</b></td><td>Singleton row holding the <b>last health-check result</b> against the configured Infobip account (latency, HTTP status, consecutive failures, last error). The secret <code>ApiKey</code> stays in <code>appsettings.json</code>; only a <b>fingerprint</b> is persisted so the admin UI can confirm which key is live without ever reading it back. Drives the green/red LED in §16.</td><td><code>BaseUrl</code>, <code>ApiKeyFingerprint</code>, <code>HealthStatus</code>, <code>LastHealthCheckAt</code>, <code>LastHealthCheckLatencyMs</code>, <code>ConsecutiveFailures</code>, <code>LastError</code></td></tr>
+            <tr><td><code>InfobipApplication</code> <b>(enriched)</b></td><td>Use case → Infobip <code>applicationId</code> binding (one row per Hermes use case, e.g. Speed2Lead). Now also carries the human-readable <code>ApplicationName</code>, default channel, callback URL, and last-sync diagnostics so the bootstrap idempotency check has somewhere to write its result.</td><td><code>ApplicationId</code>, <code>ApplicationName</code>, <code>UseCase</code>, <code>DefaultChannel</code>, <code>Status</code>, <code>IsDefault</code>, <code>CallbackUrl</code>, <code>LastSyncAt</code>, <code>LastError</code></td></tr>
+            <tr><td><code>InfobipCustomerMapping</code> <b>(renamed from <code>CustomerToInfobip</code>)</b></td><td>1:1 Customer ↔ Infobip Entity binding + provisioning state. Keeps Infobip out of the core <code>Customer</code> table.</td><td><code>CustomerId</code> (FK), <code>InfobipEntityId</code>, <code>InfobipEntityName</code>, <code>ProvisioningState</code>, <code>LastError</code></td></tr>
+            <tr><td><code>InfobipPhoneNumber</code> <b>(renamed from <code>phone_number</code>)</b></td><td>Customer-owned MSISDN + registration state machine</td><td><code>CustomerId</code>, <code>Number_E164</code>, <code>InfobipNumberKey</code>, <code>RegistrationState</code></td></tr>
+            <tr><td><code>InfobipProvisioningJob</code></td><td>Audit + retry log for every Infobip call (admin UI feed)</td><td><code>ResourceType</code>, <code>Action</code>, <code>State</code>, <code>Attempts</code></td></tr>
+            <tr><td><code>InfobipMessageDispatch</code> <b>(new — message tracking)</b></td><td><b>One row per Infobip <code>messageId</code> (per recipient).</b> Persists the response metadata returned by <code>POST /messages-api/1/messages</code> — <b>never</b> the message body — so DLRs (push or pull), status refresh, error recovery, and retries have a durable handle. A bulk that fans out to N destinations produces N rows sharing the same <code>BulkId</code>. Body, template, variables and media URLs are deliberately excluded for GDPR + storage reasons; if a future feature needs them they go in a separate store and join on <code>MessageId</code>.</td><td><code>MessageId</code> (unique), <code>BulkId</code> (indexed), <code>Destination</code>, <code>InfobipApplicationId</code>, <code>InfobipEntityId</code>, <code>CampaignReferenceId</code>, <code>Channel</code>, <code>LatestStatusGroupName</code>, <code>LatestStatusName</code>, <code>LatestErrorName</code>, <code>LatestErrorIsPermanent</code>, <code>RetryCount</code>, <code>RetryOfMessageId</code>, <code>SentAt</code>, <code>LastStatusRefreshAt</code>, <code>DeliveredAt</code>, <code>FinalizedAt</code></td></tr>
+        </tbody>
+    </table>
+
+    <p style="font-size:13.5px;">
+        <b>Provisioning state values</b> (in <code>InfobipCustomerMapping.ProvisioningState</code>):
+        <code>pending → provisioning → provisioned → failed</code>
+    </p>
+    <p style="font-size:13.5px;">
+        <b>Registration state values</b> (in <code>InfobipPhoneNumber.RegistrationState</code>):
+        <code>requested → procuring → pending_registration → pending_approval → active → suspended / decommissioned</code>
+    </p>
+    <p style="font-size:13.5px;">
+        <b>Dispatch status values</b> (in <code>InfobipMessageDispatch.LatestStatusGroupName</code>):
+        <code>PENDING → DELIVERED</code> · <code>UNDELIVERABLE</code> · <code>EXPIRED</code> · <code>REJECTED</code> (terminal groups set <code>FinalizedAt</code>; <code>DELIVERED</code> additionally sets <code>DeliveredAt</code>).
+    </p>
+    <p style="font-size:13.5px;"><b>Dispatch write path:</b> (1) <b>on send response</b> — one row per <code>MessageAck</code> in the <code>SendMessagesResponse</code> body (initial group is usually <code>PENDING</code>); (2) <b>on DLR push</b> via Subscriptions webhook — match by <code>MessageId</code>, update <code>LatestStatus*</code> / <code>LatestError*</code>, bump <code>LastStatusRefreshAt</code>; (3) <b>on DLR pull</b> via <code>GET /messages-api/1/reports</code> — same shape, used to recover from missed webhooks; (4) <b>refresh worker</b> drains <code>PENDING</code> rows older than the refresh window; (5) <b>retry</b> for non-permanent errors creates a new row with a new <code>MessageId</code> and <code>RetryOfMessageId</code> pointing back, leaving the prior row as the audit trail.</p>
+    <p style="font-size:13.5px;"><b>Body NOT stored.</b> No <code>Text</code>, <code>Template</code>, <code>Variables</code>, <code>MediaUrl</code>. Reasons: GDPR data-minimisation (bodies are typically customer PII) and storage growth at send volume. <code>CorrelationData</code> + <code>CallbackData</code> are kept because they are the only durable Hermes-side handles for matching a stray DLR / MO back to a <code>ContactAttempt</code>.</p>
+    <p style="font-size:13.5px;">
+        <b>Health status values</b> (in <code>InfobipConfiguration.HealthStatus</code>):
+        <code>Healthy</code> (last probe &lt; interval &amp; HTTP 2xx) <code>→ Degraded</code> (1–2 consecutive failures or latency &gt; threshold) <code>→ Unhealthy</code> (≥ 3 consecutive failures) <code>→ Unknown</code> (never probed since boot).
+    </p>
+    <p style="font-size:13.5px;"><b>Health-check writer:</b> a lightweight background job (default every 60 s) issues a benign read against the configured Infobip account (TBD — generic Infobip health endpoint, e.g. <code>GET /account/1/account</code>) and updates the singleton row. The same row is read by the admin UI in §16 and exposed on <code>/health/ready</code> for orchestrators.</p>
+
+    <h2>11. Implementation Status</h2>
+    <p>
+        <span class="legend"><span class="dot" style="background:#2ea043"></span>Done</span>
+        <span class="legend"><span class="dot" style="background:#d4a72c"></span>Partial</span>
+        <span class="legend"><span class="dot" style="background:#cf222e"></span>Not built</span>
+    </p>
+    <div class="status-grid">
+        <div class="pill done"><b>Outbound send</b>WhatsApp text + template + DLR roundtrip verified end-to-end</div>
+        <div class="pill done"><b>Application reconciliation</b>Speed2Lead idempotent GET-or-create on service startup</div>
+        <div class="pill done"><b>Customer ↔ Entity</b>Endpoint surface in place</div>
+        <div class="pill todo"><b>Numbers read API serves from local DB</b>Currently a stub — depends on the local mapping table landing. Webhook receiver for ES events populates this table once both ship.</div>
+        <div class="pill done"><b>Admin reconciliation endpoint</b><code>GET /api/admin/numbers/inventory</code> proxies to Infobip Resource Management for drift detection. Admin-auth gated (route prefix + ingress today; <code>[Authorize]</code> attribute pending project-wide auth middleware).</div>
+        <div class="pill done"><b>WhatsApp templates</b>CRUD passthrough</div>
+        <div class="pill partial"><b>Subscriptions</b>CRUD ready · webhook receiver not built</div>
+        <div class="pill todo"><b>DB tables</b>None yet — see §10 proposal (includes new <code>InfobipMessageDispatch</code> for send-response tracking, status refresh + retry)</div>
+        <div class="pill todo"><b>Webhook receiver</b>No inbound handler for DLR / MO / resource lifecycle / Meta verification</div>
+        <div class="pill todo"><b>Async worker</b>NumberSync worker not built (Application + Entity reconciliation now run as startup hosted services — see §4)</div>
+        <div class="pill todo"><b>Auth &amp; tenant context</b>No auth middleware yet — <code>entityId</code> is still sent in the request body. Once auth is wired, <code>entityId</code> will be derived from the caller.</div>
+        <div class="pill todo"><b>Embedded Signup integration</b>Hermes-hosted ES widget (Meta JS SDK) + <code>POST /whatsapp/1/embedded-signup/registrations/share-waba</code> handoff + ES status webhook receiver — not yet built. Tech Provider Program enrolment with Meta is a prerequisite.</div>
+        <div class="pill todo"><b>API key isolation</b>One global API key per deployment today. Future hardening: one key per <code>(App, Entity)</code> so a leaked key's blast radius is one tenant × one use case.</div>
+    </div>
+
+    <h2>12. Multi-Instance Inbound Routing</h2>
+    <div class="mermaid">
+        flowchart LR
+        IB[Infobip] -->|MO / DLR| S1["Subscription 1<br />criteria: e1, e2, e3"]
+        IB -->|MO / DLR| S2["Subscription 2<br />criteria: e4, e5"]
+        IB -->|MO / DLR| S3["Subscription 3<br />criteria: e6, e7"]
+        S1 --> I1[Hermes Instance 1]
+        S2 --> I2[Hermes Instance 2]
+        S3 --> I3[Hermes Instance 3]
+        I1 --> U1[Users on Inst 1]
+        I2 --> U2[Users on Inst 2]
+        I3 --> U3[Users on Inst 3]
+        style IB fill:#fce4ec
+    </div>
+    <p style="font-size:13px;color:#666;">Instance is <b>not</b> an Infobip dimension — solved at the <b>forwarding-subscription</b> layer (see §6). These are inbound MO routing rules, one per channel per receiver. User migration = update one subscription's <code>criteria[]</code>.</p>
+
+    <h2>13. Billing/Reporting — Four-Dimensional Slice</h2>
+    <table>
+        <thead><tr><th>Dimension</th><th>Field</th><th>Source of truth</th></tr></thead>
+        <tbody>
+            <tr><td>Use case</td><td><code>applicationId</code></td><td>Hermes use case (Speed2Lead, …)</td></tr>
+            <tr><td>Client</td><td><code>entityId</code></td><td>Hermes Customer</td></tr>
+            <tr><td>Campaign</td><td><code>campaignReferenceId</code></td><td>Hermes Campaign</td></tr>
+            <tr><td>Channel</td><td><code>channel</code></td><td>SMS / WHATSAPP / VIBER / RCS / …</td></tr>
+        </tbody>
+    </table>
+    <p style="font-size:13.5px;">Single query: <code>GET /messages-api/1/reports?applicationId=&amp;entityId=&amp;campaignReferenceId=&amp;channel=</code></p>
+
+    <h2>14. Roadmap — Suggested Phasing</h2>
+    <div class="mermaid">
+        flowchart LR
+        P0[Phase 0<br />Deployer Setup<br />appsettings +<br />InfobipConfiguration +<br />Application reconciler<br />on startup] --> P1[Phase 1<br />DB tables +<br />Entity reconciler on startup +<br />eager Entity on new customer<br />InfobipCustomerMapping]
+        P1 --> P2[Phase 2<br />Outbound only<br />send WhatsApp text +<br />template + DLR pull<br />InfobipMessageDispatch]
+        P2 --> P3[Phase 3<br />Inbound + webhooks<br />DLR push, MO,<br />resource lifecycle]
+        P3 --> P4[Phase 4<br />Auth + tenant context<br />+ admin UI]
+        P4 --> P5[Phase 5<br />Customer self-service<br />numbers + campaigns]
+        style P0 fill:#c8e6c9
+        style P1 fill:#fff9c4
+        style P2 fill:#ffe0b2
+        style P3 fill:#ffccbc
+        style P4 fill:#f8bbd0
+        style P5 fill:#e1bee7
+    </div>
+    <table>
+        <thead><tr><th>Phase</th><th>What ships</th><th>Why this order</th></tr></thead>
+        <tbody>
+            <tr><td><b>0</b> · Deployer Setup</td><td>appsettings (<code>BaseUrl</code> + <code>ApiKey</code>), <code>InfobipConfiguration</code> + <code>InfobipApplication</code> tables, <b>Application reconciliation hosted service</b> (runs on every service start — GET-or-create per configured use case), periodic health check writing into <code>InfobipConfiguration</code></td><td>Nothing else works without it; running on startup means no install-time step and self-healing on drift</td></tr>
+            <tr><td><b>1</b> · Customer Provisioning</td><td><code>InfobipCustomerMapping</code> table, <b>Entity reconciliation hosted service</b> (runs on every service start — backfills any missing Entity), eager Entity creation in the customer-creation pipeline for new customers thereafter, state machine</td><td>Every outbound send needs an <code>entityId</code>; startup backfill catches drift and any customer that pre-dates the integration</td></tr>
+            <tr><td><b>2</b> · Outbound only</td><td>Send WhatsApp text + template, <b><code>InfobipMessageDispatch</code> table</b> populated on every send response (one row per <code>MessageId</code>), pull DLR via <code>GET /reports</code> to refresh status. No inbound webhooks yet.</td><td>Smallest end-to-end value; the dispatch table is the recovery handle that makes the pull-based DLR path correct in the face of process restarts and missed responses</td></tr>
+            <tr><td><b>3</b> · Inbound + webhooks</td><td>Webhook receiver, DLR push (updates <code>InfobipMessageDispatch</code> in place), MO push, resource-lifecycle events (Meta approval, number suspension), <code>InfobipPhoneNumber</code> state driven by webhooks</td><td>Webhooks need a stable receiver and DB tables to write into — comes after outbound is stable</td></tr>
+            <tr><td><b>4</b> · Auth &amp; admin</td><td>Tenant-context middleware (<code>entityId</code> from auth, not body), admin UI for provisioning state + retries</td><td>Hardening once core flows work</td></tr>
+            <tr><td><b>5</b> · Customer self-service</td><td>Customer-facing number request, template management, campaign assignment UI</td><td>Last — assumes underlying flows are reliable</td></tr>
+        </tbody>
+    </table>
+
+    <h2>15. Discussion Points &amp; Open Technical Decisions</h2>
+    <p style="font-size:13.5px;">Points that need a team decision before we lock the design. Not all of these are questions — most are <b>proposals</b> with trade-offs that need discussion.</p>
+
+    <h3>15.A Quick open questions (carry-over)</h3>
+    <table>
+        <tbody>
+            <tr><td>Q1</td><td>Inbound routing when a number is shared across campaigns — default inbound / active session / first wins?</td></tr>
+            <tr><td>Q2</td><td>API key strategy — single global key per deployment, or one key per <code>(App, Entity)</code> for blast-radius isolation?</td></tr>
+        </tbody>
+    </table>
+
+    <h3>15.1 Numbers as first-class entities — not campaign-scoped</h3>
+    <p style="font-size:13.5px;"><b>Proposal:</b> a number lives in its own registry table, independent of any campaign. Its <b>approval/registration status</b> is tracked there and kept fresh by an async worker that polls the provider. A campaign can only pick from numbers whose status is <code>Approved</code>. Today the design treats numbers as passthrough; this point pushes the model toward "number is a long-lived asset, campaign just references it."</p>
+    <div class="mermaid">
+        flowchart LR
+        subgraph H["Hermes (own DB)"]
+        NR["Numbers Registry<br />phone_number table"]
+        AW["Async Worker<br />(per provider)"]
+        Q["Job queue / outbox"]
+        end
+        subgraph P["Provider (Infobip / Twilio / ...)"]
+        PA["Provider API"]
+        end
+        NR -- "create / re-sync request" --> Q
+        Q --> AW
+        AW -- "register · poll status" --> PA
+        PA -. "status update" .-> AW
+        AW -- "write back status" --> NR
+        NR -. "filter status = Approved" .-> C["Campaign Builder"]
+        C -- "assign approved number" --> CAMP["Campaign"]
+        style NR fill:#e3f2fd
+        style AW fill:#fff3e0
+        style PA fill:#fce4ec
+        style CAMP fill:#e8f5e9
+    </div>
+    <div class="mermaid">
+        stateDiagram-v2
+        [*] --> Requested : created in Hermes
+        Requested --> Procuring : worker picked up
+        Procuring --> PendingApproval : provider accepted
+        PendingApproval --> Approved : provider / Meta approval
+        PendingApproval --> Rejected : provider rejection
+        Approved --> AssignableToCampaign
+        Approved --> Suspended : provider event
+        Suspended --> Approved : recovery
+        Rejected --> [*]
+        AssignableToCampaign --> [*]
+    </div>
+    <div class="note"><b>Decision needed:</b> do we accept this "registry + worker" model, or stay passthrough? <b>Implication:</b> requires the §10 DB tables, an outbox/queue, and a worker host before any campaign UI can be built on top.</div>
+
+    <h3>15.2 Provider abstraction — Infobip-replaceable from day one</h3>
+    <p style="font-size:13.5px;"><b>Proposal:</b> design the layer generically so swapping Infobip for Twilio (or adding a second provider) is a config change, not a rewrite. One <code>IMessagingProvider</code> contract; one worker per provider implementation. Each worker exposes a <b>health endpoint</b> (alive / API key valid / last-success timestamp) and runs <b>independently</b> from the send path — it can keep syncing number statuses even if no sends are flowing.</p>
+    <div class="mermaid">
+        flowchart TB
+        subgraph Core["Hermes Core"]
+        IProv["IMessagingProvider<br />(interface)"]
+        Reg["Provider Registry<br />(by channel + customer config)"]
+        Hub["Worker Hub"]
+        end
+        subgraph Workers["Provider Workers (independent processes)"]
+        WI["Infobip Worker<br />━━━<br />GET /health<br />poll number status<br />handle DLR / MO"]
+        WT["Twilio Worker<br />━━━<br />GET /health<br />poll number status<br />handle DLR / MO"]
+        WX["Future Provider Worker"]
+        end
+        IProv --> WI
+        IProv --> WT
+        IProv -.-> WX
+        Reg --> IProv
+        Hub -- "supervises · restarts" --> WI
+        Hub -- "supervises · restarts" --> WT
+        WI -- "/health" --> Mon["Admin UI<br />(LED per worker)"]
+        WT -- "/health" --> Mon
+        style IProv fill:#fff3e0,stroke:#e2336b,stroke-width:2px
+        style WI fill:#e3f2fd
+        style WT fill:#e8f5e9
+        style Mon fill:#fce4ec
+    </div>
+    <div class="note"><b>Decision needed:</b> (a) do we commit to provider-abstraction upfront, or build Infobip-only and refactor later? (b) is "one worker per provider" the right granularity, or one worker per <i>concern</i> (NumberSync, DLR, Webhook) shared across providers? <b>Implication:</b> upfront abstraction adds ~1 sprint of plumbing but pays off if a second provider lands within 12 months.</div>
+
+    <h3>15.3 Multi-channel per number — each number can serve many channels</h3>
+    <p style="font-size:13.5px;"><b>Proposal:</b> the same MSISDN can be enrolled on several channels (WhatsApp, SMS, RCS, Voice), and <b>each channel can be served by a different provider</b>. Under a number in the admin UI, a dropdown lists the channels it's enrolled on. Each (number × channel) row points to the provider responsible for it; the corresponding provider's worker is what keeps that row's status fresh.</p>
+    <div class="mermaid">
+        flowchart LR
+        N["+33 1 23 45 67 89"] --> B1["binding: WhatsApp"]
+        N --> B2["binding: SMS"]
+        N --> B3["binding: RCS"]
+        B1 --> P1["Provider: Infobip"]
+        B2 --> P2["Provider: Twilio"]
+        B3 --> P1
+        P1 --> WI["Infobip Worker<br />updates B1, B3"]
+        P2 --> WT["Twilio Worker<br />updates B2"]
+        style N fill:#e3f2fd
+        style P1 fill:#fce4ec
+        style P2 fill:#e8f5e9
+    </div>
+    <div class="mermaid">
+        erDiagram
+        PHONE_NUMBER ||--o{ NUMBER_CHANNEL_BINDING : "registered on"
+        NUMBER_CHANNEL_BINDING }o--|| PROVIDER : "served by"
+        PHONE_NUMBER {
+        int Id PK
+        string Number_E164
+        string Country_ISO2
+        int CustomerId
+        }
+        NUMBER_CHANNEL_BINDING {
+        int Id PK
+        int PhoneNumberId FK
+        string Channel "WhatsApp / SMS / RCS / Voice"
+        string ProviderCode "infobip / twilio / ..."
+        string ProviderResourceKey "numberKey / SID"
+        string RegistrationState
+        datetime LastSyncedAt
+        }
+        PROVIDER {
+        string Code PK
+        string DisplayName
+        string Status "alive / down"
+        }
+    </div>
+    <div class="note"><b>Decision needed:</b> do we split <code>phone_number</code> into <code>phone_number</code> + <code>number_channel_binding</code> (proposed above), or keep <code>Channel</code> on the number row as in §10 today? <b>Implication:</b> splitting it is the only clean way to support per-channel providers and per-channel approval states; keeping it flat means a number is duplicated across rows when registered on multiple channels.</div>
+
+    <h3>15.4 Campaign creation — channel-first, and the provider question</h3>
+    <p style="font-size:13.5px;"><b>Proposal:</b> the campaign builder starts with the channel. Once a channel is picked, the number dropdown is filtered to numbers that have an <code>Approved</code> binding for that channel. <b>Open question:</b> should the user <i>also</i> pick the provider here, or is the provider implicit from the (number × channel) binding chosen in §15.3?</p>
+    <div class="mermaid">
+        flowchart LR
+        S[Create Campaign] --> S1["1. Pick Channel<br />WhatsApp / SMS / RCS / ..."]
+        S1 --> S2["2. Pick Number<br />(filtered: Approved bindings<br />for this channel)"]
+        S2 --> Q{"3. Pick Provider?"}
+        Q -->|Option A: implicit| A["Provider derived from<br />the chosen binding<br />(one binding = one provider)"]
+        Q -->|Option B: explicit| B["User selects provider<br />(only if multiple bindings<br />for same number × channel)"]
+        A --> S3[4. Compose content]
+        B --> S3
+        S3 --> Done[Campaign Saved]
+        style Q fill:#fff3e0,stroke:#e2336b,stroke-width:2px
+    </div>
+    <table>
+        <thead><tr><th>Option</th><th>Pros</th><th>Cons</th></tr></thead>
+        <tbody>
+            <tr>
+                <td><b>A · Implicit</b><br />Provider = the one tied to the (number × channel) binding</td>
+                <td>Simpler UI · fewer clicks · impossible to send via wrong provider · matches §15.3 model (binding owns the provider)</td>
+                <td>Cannot A/B between providers for the same number on the same channel · failover requires switching the binding</td>
+            </tr>
+            <tr>
+                <td><b>B · Explicit</b><br />User picks provider in the campaign form</td>
+                <td>Allows A/B testing · enables manual failover (Infobip down → pick Twilio) · supports same number registered with two providers</td>
+                <td>More UI · risk of mismatched provider/binding · requires <code>NUMBER_CHANNEL_BINDING</code> to be <b>many-per-channel</b> (number can have two bindings on same channel, one per provider)</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="note"><b>Recommendation (to discuss):</b> start with <b>Option A</b> (implicit, one binding per channel = one provider). It keeps the data model clean and matches the §15.3 ER diagram. <b>Option B</b> is the right end state only if multi-provider failover becomes a real requirement — and even then we should think about it as a routing rule above the binding, not a per-campaign choice.</div>
+
+    <h3>15.5 Summary — how 15.1–15.4 fit together</h3>
+    <div class="mermaid">
+        flowchart TB
+        subgraph S1["§15.1 · Numbers Registry"]
+        NR["phone_number<br />(own table)"]
+        end
+        subgraph S3["§15.3 · Channel bindings"]
+        NCB["number_channel_binding<br />(per channel, per provider)"]
+        end
+        subgraph S2["§15.2 · Provider abstraction"]
+        IP["IMessagingProvider"]
+        WK["Workers (per provider)"]
+        end
+        subgraph S4["§15.4 · Campaign flow"]
+        CB["Campaign Builder<br />channel → number → (provider?)"]
+        end
+        NR --> NCB
+        NCB --> IP
+        IP --> WK
+        WK -- "status sync" --> NCB
+        NCB -- "filter Approved by channel" --> CB
+        style NR fill:#e3f2fd
+        style NCB fill:#fff3e0
+        style IP fill:#fce4ec
+        style WK fill:#e8f5e9
+        style CB fill:#f3e5f5
+    </div>
+
+    <h2>16. Proposed Admin UI — Infobip Configuration in Hermes</h2>
+    <p style="font-size:13.5px;">A single admin page where the deployer's ops team manages the Infobip integration and sees sync state. Designed to be obvious — every action is one click, every state is one glance.</p>
+
+    <style>
+        .ui-frame {
+            background: #f5f7fa;
+            border: 1px solid #cfd8dc;
+            border-radius: 8px;
+            padding: 0;
+            margin: 16px 0;
+            overflow: hidden;
+            font-size: 13px;
+        }
+
+        .ui-topbar {
+            background: #1e293b;
+            color: #fff;
+            padding: 10px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .ui-topbar .brand {
+                font-weight: 700;
+            }
+
+            .ui-topbar .user {
+                font-size: 12px;
+                opacity: 0.8;
+            }
+
+        .ui-body {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .ui-sidebar {
+            width: 200px;
+            background: #fff;
+            border-right: 1px solid #e0e6eb;
+            padding: 12px 0;
+        }
+
+        .ui-nav-item {
+            padding: 10px 18px;
+            color: #5a6878;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+            .ui-nav-item.active {
+                background: #f0f7ff;
+                color: #1e3a8a;
+                border-left-color: #e2336b;
+                font-weight: 600;
+            }
+
+        .ui-content {
+            flex: 1;
+            padding: 20px 26px;
+        }
+
+        .ui-h {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0 0 4px;
+        }
+
+        .ui-sub {
+            font-size: 12.5px;
+            color: #6b7280;
+            margin-bottom: 18px;
+        }
+
+        .ui-card {
+            background: #fff;
+            border: 1px solid #e0e6eb;
+            border-radius: 6px;
+            padding: 16px 18px;
+            margin-bottom: 14px;
+        }
+
+        .ui-card-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .ui-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 12.5px;
+        }
+
+            .ui-row .label {
+                color: #6b7280;
+            }
+
+            .ui-row .val {
+                color: #1e293b;
+                font-family: ui-monospace, monospace;
+                font-size: 12px;
+            }
+
+        .ui-btn {
+            padding: 6px 14px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .ui-btn-primary {
+            background: #e2336b;
+            color: #fff;
+        }
+
+        .ui-btn-secondary {
+            background: #fff;
+            color: #475569;
+            border-color: #cbd5e1;
+        }
+
+        .ui-btn-success {
+            background: #2ea043;
+            color: #fff;
+        }
+
+        .ui-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+            .ui-badge.ok {
+                background: #d1fae5;
+                color: #065f46;
+            }
+
+            .ui-badge.warn {
+                background: #fef3c7;
+                color: #92400e;
+            }
+
+            .ui-badge.err {
+                background: #fee2e2;
+                color: #991b1b;
+            }
+
+            .ui-badge.info {
+                background: #dbeafe;
+                color: #1e40af;
+            }
+
+        .ui-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .ui-stat {
+            background: #fff;
+            border: 1px solid #e0e6eb;
+            border-radius: 6px;
+            padding: 12px 14px;
+            text-align: center;
+        }
+
+            .ui-stat .num {
+                font-size: 22px;
+                font-weight: 700;
+                color: #1e293b;
+            }
+
+            .ui-stat .lbl {
+                font-size: 11.5px;
+                color: #6b7280;
+                margin-top: 2px;
+            }
+
+            .ui-stat.ok .num {
+                color: #2ea043;
+            }
+
+            .ui-stat.warn .num {
+                color: #d4a72c;
+            }
+
+            .ui-stat.err .num {
+                color: #cf222e;
+            }
+
+        .ui-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+            .ui-table th, .ui-table td {
+                padding: 7px 10px;
+                border-bottom: 1px solid #f0f0f0;
+                text-align: left;
+            }
+
+            .ui-table th {
+                background: #f8fafc;
+                color: #475569;
+                font-weight: 600;
+                font-size: 11px;
+                text-transform: uppercase;
+            }
+
+        .ui-input {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 12.5px;
+            background: #fff;
+            box-sizing: border-box;
+        }
+
+        .ui-field {
+            margin-bottom: 10px;
+        }
+
+            .ui-field label {
+                display: block;
+                font-size: 11.5px;
+                color: #475569;
+                margin-bottom: 4px;
+                font-weight: 500;
+            }
+
+        .ui-led {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+            .ui-led.green {
+                background: #2ea043;
+                box-shadow: 0 0 0 3px rgba(46,160,67,.15);
+            }
+
+            .ui-led.amber {
+                background: #d4a72c;
+                box-shadow: 0 0 0 3px rgba(212,167,44,.15);
+            }
+
+            .ui-led.red {
+                background: #cf222e;
+                box-shadow: 0 0 0 3px rgba(207,34,46,.15);
+            }
+    </style>
+
+    <p style="font-size:13.5px;"><b>Scope of this section:</b> Infobip connection setup, Application &amp; Entity reconciliation status (driven by the startup hosted services in §4), customer-to-Entity sync, and per-provider worker health (§15.2 — top-level <b>Providers</b> in the sidebar, LED per row). Sender &amp; per-channel binding management is a separate page — see <b>§17 (Messaging Providers)</b>.</p>
+
+    <h3>16.1 Overview screen — first thing the ops team sees</h3>
+    <div class="ui-frame">
+        <div class="ui-topbar">
+            <div class="brand">Hermes360 · Admin</div>
+            <div class="user">ops@deployer.com</div>
+        </div>
+        <div class="ui-body">
+            <div class="ui-sidebar">
+                <div class="ui-nav-item active">⚙ Integration</div>
+                <div class="ui-nav-item">🔌 Providers</div>
+                <div class="ui-nav-item">👥 Customers</div>
+                <div class="ui-nav-item">📞 Numbers</div>
+                <div class="ui-nav-item">💬 Templates</div>
+                <div class="ui-nav-item">🔔 Webhooks</div>
+                <div class="ui-nav-item">📊 Reports</div>
+            </div>
+            <div class="ui-content">
+                <div class="ui-h">Messaging Integration</div>
+                <div class="ui-sub">Providers, applications, and sync status across the deployment.</div>
+
+                <div class="ui-card">
+                    <div class="ui-card-title">
+                        <span>Providers <span class="ui-badge info">2 active</span></span>
+                        <button class="ui-btn ui-btn-secondary">+ Add provider</button>
+                    </div>
+                    <table class="ui-table">
+                        <thead><tr><th>Provider</th><th>Worker</th><th>Channels</th><th>Last health</th><th></th></tr></thead>
+                        <tbody>
+                            <tr><td><b>Infobip</b> <span class="ui-badge ok">primary</span></td><td><span class="ui-led green"></span>alive · 200 OK</td><td>WhatsApp · SMS · RCS</td><td>30 s ago</td><td><button class="ui-btn ui-btn-secondary">Configure</button></td></tr>
+                            <tr><td><b>Twilio</b></td><td><span class="ui-led amber"></span>degraded · 502 (1/3 retries)</td><td>SMS</td><td>1 m ago</td><td><button class="ui-btn ui-btn-secondary">Configure</button></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="ui-card">
+                    <div class="ui-card-title">
+                        <span><span class="ui-led green"></span>Infobip · connection</span>
+                        <button class="ui-btn ui-btn-secondary">Test connection</button>
+                    </div>
+                    <div class="ui-row"><span class="label">Base URL</span><span class="val">xr5e2e.api.infobip.com</span></div>
+                    <div class="ui-row"><span class="label">API key</span><span class="val">App ••••••••••••••••ee0d <span class="ui-badge ok">configured</span></span></div>
+                    <div class="ui-row"><span class="label">Last health check</span><span class="val">2 min ago · 200 OK</span></div>
+                    <div class="ui-row"><span class="label">Source</span><span class="val">appsettings.json</span></div>
+                </div>
+
+                <div class="ui-card">
+                    <div class="ui-card-title">
+                        <span>Application — Speed2Lead</span>
+                        <span class="ui-badge ok">provisioned</span>
+                    </div>
+                    <div class="ui-row"><span class="label">applicationId</span><span class="val">speed2lead</span></div>
+                    <div class="ui-row"><span class="label">applicationName</span><span class="val">Speed2Lead</span></div>
+                    <div class="ui-row"><span class="label">Created</span><span class="val">2026-05-11 14:22 UTC</span></div>
+                    <div class="ui-row"><span class="label">Last reconciled</span><span class="val">on startup · 2026-05-15 08:02 UTC · already existed</span></div>
+                </div>
+
+                <div class="ui-card">
+                    <div class="ui-card-title">
+                        <span>Customer Sync <span class="ui-badge info" style="font-weight:500;">auto-reconciled on every service start</span></span>
+                        <div>
+                            <button class="ui-btn ui-btn-secondary">Retry failed</button>
+                            <button class="ui-btn ui-btn-primary">Re-run reconciler</button>
+                        </div>
+                    </div>
+                    <div class="ui-stats">
+                        <div class="ui-stat ok"><div class="num">247</div><div class="lbl">Provisioned</div></div>
+                        <div class="ui-stat warn"><div class="num">3</div><div class="lbl">Pending</div></div>
+                        <div class="ui-stat err"><div class="num">2</div><div class="lbl">Failed</div></div>
+                        <div class="ui-stat"><div class="num">252</div><div class="lbl">Total customers</div></div>
+                    </div>
+                    <table class="ui-table">
+                        <thead><tr><th>Customer</th><th>Entity ID</th><th>State</th><th>Last sync</th><th></th></tr></thead>
+                        <tbody>
+                            <tr><td>Acme Corp</td><td><code>cust-1042</code></td><td><span class="ui-badge ok">provisioned</span></td><td>2 h ago</td><td></td></tr>
+                            <tr><td>Globex SA</td><td><code>cust-1047</code></td><td><span class="ui-badge warn">pending</span></td><td>just now</td><td></td></tr>
+                            <tr><td>Initech Ltd</td><td><code>cust-1051</code></td><td><span class="ui-badge err">failed</span></td><td>12 m ago · entityName null</td><td><button class="ui-btn ui-btn-secondary">Retry</button></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3>16.2 First-time setup — when nothing is configured yet</h3>
+    <div class="ui-frame">
+        <div class="ui-topbar">
+            <div class="brand">Hermes360 · Admin · Setup</div>
+            <div class="user">ops@deployer.com</div>
+        </div>
+        <div class="ui-body">
+            <div class="ui-sidebar">
+                <div class="ui-nav-item active">⚙ Integration</div>
+                <div class="ui-nav-item">🔌 Providers</div>
+                <div class="ui-nav-item">👥 Customers</div>
+                <div class="ui-nav-item">📞 Numbers</div>
+                <div class="ui-nav-item">💬 Templates</div>
+                <div class="ui-nav-item">🔔 Webhooks</div>
+            </div>
+            <div class="ui-content">
+                <div class="ui-h">Welcome — let's connect a provider</div>
+                <div class="ui-sub">Two steps. The rest happens automatically the next time the service starts.</div>
+
+                <div class="ui-card">
+                    <div class="ui-card-title"><span>Step 1 of 2 · Pick a provider</span><span class="ui-badge info">in progress</span></div>
+                    <div class="ui-field">
+                        <label>Provider</label>
+                        <select class="ui-input">
+                            <option>Infobip</option>
+                            <option>Twilio</option>
+                            <option>… add custom</option>
+                        </select>
+                        <p style="font-size:11.5px;color:#6b7280;margin:6px 0 0;">Provider plugins are pluggable — adding a new one means dropping in a new <code>IMessagingProvider</code> implementation.</p>
+                    </div>
+                </div>
+
+                <div class="ui-card">
+                    <div class="ui-card-title"><span>Step 2 of 2 · Connection</span><span class="ui-badge">waiting</span></div>
+                    <div class="ui-field">
+                        <label>Base URL</label>
+                        <input class="ui-input" value="xr5e2e.api.infobip.com" />
+                    </div>
+                    <div class="ui-field">
+                        <label>API key</label>
+                        <input class="ui-input" placeholder="Paste your provider API key" />
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:10px;">
+                        <button class="ui-btn ui-btn-secondary">Test</button>
+                        <button class="ui-btn ui-btn-primary">Save &amp; restart service →</button>
+    

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Hermes · Connect WhatsApp Business — Onboarding Guide</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-faint: #6b6b6b;
+    --rule: #e3e3e3;
+    --accent: #1f6feb;
+    --accent-soft: #eaf2fd;
+    --warn-bg: #fff7e6;
+    --warn-border: #f0c060;
+    --ok-bg: #ebf7ec;
+    --ok-border: #8dc99c;
+    --bg: #fafafa;
+    --code-bg: #f3f3f3;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.55;
+    font-size: 15px;
+  }
+  .wrap {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 32px 28px 64px;
+  }
+  header {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 18px;
+    margin-bottom: 28px;
+  }
+  header .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+  h1 {
+    font-size: 26px;
+    margin: 6px 0 8px;
+    font-weight: 600;
+  }
+  header p {
+    margin: 6px 0 0;
+    color: var(--ink-soft);
+    font-size: 14.5px;
+  }
+  h2 {
+    font-size: 19px;
+    margin: 36px 0 10px;
+    font-weight: 600;
+    border-left: 3px solid var(--accent);
+    padding-left: 10px;
+  }
+  h3 {
+    font-size: 15.5px;
+    margin: 22px 0 8px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  p { margin: 8px 0; color: var(--ink-soft); }
+  ol, ul { padding-left: 22px; margin: 10px 0; }
+  ol li, ul li { margin: 6px 0; color: var(--ink-soft); }
+  ol li strong, ul li strong { color: var(--ink); }
+  code {
+    background: var(--code-bg);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 13px;
+  }
+  .callout {
+    margin: 14px 0;
+    padding: 12px 14px;
+    border-radius: 5px;
+    border: 1px solid var(--warn-border);
+    background: var(--warn-bg);
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .callout.ok {
+    border-color: var(--ok-border);
+    background: var(--ok-bg);
+  }
+  .callout strong { display: block; margin-bottom: 4px; font-size: 13.5px; }
+  .checklist {
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 14px 16px 14px 18px;
+    margin: 14px 0;
+  }
+  .checklist li { list-style: none; position: relative; padding-left: 24px; }
+  .checklist li::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 6px;
+    width: 14px; height: 14px;
+    border: 1.5px solid #b7b7b7;
+    border-radius: 3px;
+    background: #fff;
+  }
+  .checklist ul { padding-left: 0; margin: 0; }
+  .steps { counter-reset: step; padding-left: 0; }
+  .steps > li {
+    list-style: none;
+    counter-increment: step;
+    position: relative;
+    padding-left: 38px;
+    margin-bottom: 14px;
+  }
+  .steps > li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 0;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .step-title { color: var(--ink); font-weight: 600; }
+  .status-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 14px;
+  }
+  .status-table th, .status-table td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  .status-table th {
+    color: var(--ink-faint);
+    font-weight: 600;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .pill {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .pill.in-progress { background: #eef3fa; color: #1f4e8c; }
+  .pill.finished   { background: var(--ok-bg); color: #1b5e2c; }
+  .pill.failed     { background: #fce6e6; color: #8c1f1f; }
+  footer {
+    margin-top: 48px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Hermes · WhatsApp Business</div>
+  <h1>Connect a WhatsApp number to Hermes</h1>
+  <p>A short guide covering what to prepare on Meta's side before you start, and the steps to complete inside Hermes.</p>
+</header>
+
+<section>
+  <h2>Before you start — outside Hermes</h2>
+  <p>WhatsApp Business numbers are owned by you in Meta, not by us. To connect a number to Hermes, you need a small amount of setup on Meta's side first. None of these steps happen inside Hermes.</p>
+
+  <h3>What you need</h3>
+  <div class="checklist">
+    <ul>
+      <li><strong>A Meta Business Manager account</strong> in your company's name. If you don't have one yet, create it at <code>business.facebook.com</code>. Fill in your business address, website, and contact email — Meta uses these during verification.</li>
+      <li><strong>A phone number you control</strong>, capable of receiving SMS or a voice call. Meta will send a one-time code to this number during signup.</li>
+      <li><strong>The number must not be in active use on the consumer WhatsApp or WhatsApp Business mobile app.</strong> If it is, delete the WhatsApp account on that device before continuing — Meta will refuse to register the number otherwise.</li>
+      <li><strong>Admin rights on your Business Manager.</strong> The person completing the signup needs to be a business admin in Meta — only admins can authorize a new WhatsApp Business Account.</li>
+    </ul>
+  </div>
+
+  <h3>Special case — your number already has a WhatsApp Business Account</h3>
+  <p>If the number you want to use is already registered as a WABA somewhere (with another provider like Twilio, 360dialog, Vonage, or directly with Meta), that's fine — Meta's signup flow will handle the migration. You'll need:</p>
+  <ul>
+    <li>The <strong>two-step verification PIN</strong> currently set on the existing WABA, or the ability to reset it via Meta's recovery options.</li>
+    <li>To know which provider currently owns the number (helpful for support, not strictly required).</li>
+  </ul>
+  <div class="callout">
+    <strong>Heads up</strong>
+    Meta limits how many migration attempts a number can have in a short window. If a migration fails, wait at least a few hours before retrying — repeated failures can lock the number out temporarily.
+  </div>
+
+  <h3>What you do <em>not</em> need</h3>
+  <ul>
+    <li>You do <strong>not</strong> need an existing WhatsApp Business Account ID (WABA ID) — Hermes captures it for you during signup.</li>
+    <li>You do <strong>not</strong> need an Infobip account. Hermes handles the messaging backend for you.</li>
+    <li>You do <strong>not</strong> need to pre-create message templates — you can add those after the number is connected.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>What to do inside Hermes</h2>
+  <p>Once the prerequisites above are in place, the rest of the work happens inside Hermes. The whole flow takes about five minutes if your Business Manager is already verified.</p>
+
+  <ol class="steps">
+    <li>
+      <span class="step-title">Open the WhatsApp onboarding screen.</span>
+      Go to <code>Channels → WhatsApp → Add number</code> in the Hermes admin UI.
+    </li>
+    <li>
+      <span class="step-title">Click <em>Launch Embedded Signup</em>.</span>
+      A popup window opens — this is Meta's signup flow, hosted by Meta directly. Hermes does not collect your Meta credentials.
+    </li>
+    <li>
+      <span class="step-title">Log in to Facebook.</span>
+      Use the Facebook account associated with your Business Manager. If you're already logged in, Meta will skip this step.
+    </li>
+    <li>
+      <span class="step-title">Select or create your Business Manager and WhatsApp Business Account.</span>
+      If you have multiple Business Managers, pick the right one. If this is your first WABA, Meta will help you create one inside the popup.
+    </li>
+    <li>
+      <span class="step-title">Add and verify your phone number.</span>
+      Enter the number, choose SMS or voice verification, then enter the code Meta sends you. If your number already has an existing WABA, Meta will prompt you for the two-step PIN to migrate it.
+    </li>
+    <li>
+      <span class="step-title">Confirm the permissions.</span>
+      Meta asks you to grant Hermes permission to manage WhatsApp Business assets and send messages on your behalf. Accept, then close the popup.
+    </li>
+    <li>
+      <span class="step-title">Wait for registration to finish.</span>
+      Hermes will show the new number in your channel list with an <span class="pill in-progress">in&nbsp;progress</span> status. Meta usually completes registration in under a minute, but it can take up to a few minutes during busy periods.
+    </li>
+    <li>
+      <span class="step-title">You're live.</span>
+      When the status flips to <span class="pill finished">finished</span>, the number is ready to send and receive WhatsApp messages.
+    </li>
+  </ol>
+
+  <div class="callout ok">
+    <strong>What success looks like</strong>
+    The number appears in <code>Channels → WhatsApp</code> with status <span class="pill finished">finished</span>, a display name, and a phone-number ID. You can immediately start sending free-form messages to opted-in users and submit message templates for Meta approval.
+  </div>
+</section>
+
+<section>
+  <h2>Registration statuses you might see</h2>
+  <table class="status-table">
+    <thead>
+      <tr><th>Status</th><th>Meaning</th><th>What to do</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="pill in-progress">in&nbsp;progress</span></td>
+        <td>Meta has accepted the registration and is finalising it. Normal for the first 1–2 minutes after signup.</td>
+        <td>Wait. No action needed.</td>
+      </tr>
+      <tr>
+        <td><span class="pill finished">finished</span></td>
+        <td>The number is fully registered. You can send messages.</td>
+        <td>Move on to templates and contacts.</td>
+      </tr>
+      <tr>
+        <td><span class="pill failed">failed</span></td>
+        <td>Something went wrong on Meta's side — most commonly the number was in use on the consumer WhatsApp app, the migration PIN was wrong, or Meta hit a rate limit.</td>
+        <td>Check the failure reason shown in Hermes. Resolve the issue (e.g. delete consumer WhatsApp, get the correct PIN, wait out the rate limit) and re-run the signup.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>After your number is connected</h2>
+  <ul>
+    <li><strong>Submit message templates.</strong> Most outbound business-initiated traffic on WhatsApp requires a pre-approved template. Add yours in <code>Channels → WhatsApp → Templates</code> and Meta will review (typically within 24 hours).</li>
+    <li><strong>Set the business profile.</strong> Display name, business description, profile picture, and category all live in the channel settings. These are visible to your end users in WhatsApp.</li>
+    <li><strong>Verify your business with Meta (recommended).</strong> Verification unlocks higher messaging limits and is required for the green checkmark. You can start this from your Business Manager any time.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>If you get stuck</h2>
+  <p>The most common blockers and how to resolve them:</p>
+  <ul>
+    <li><strong>"This number cannot be used"</strong> — almost always means the number is active on the consumer WhatsApp app on a phone somewhere. Delete the account in the WhatsApp app, then retry.</li>
+    <li><strong>"Two-step verification PIN incorrect"</strong> — Meta lets you reset the PIN from <em>WhatsApp Manager → Settings → Two-step verification</em>. If you don't have access there, your current provider can help, or you can wait 7 days for Meta's automatic recovery to kick in.</li>
+    <li><strong>"You need business verification first"</strong> — Meta requires your Business Manager to be verified before allowing a WABA in some cases. Start verification from <em>Business Settings → Security Center</em> in Meta Business Manager. It usually takes 2–5 business days.</li>
+    <li><strong>Registration stuck on <span class="pill in-progress">in&nbsp;progress</span> for more than 10 minutes</strong> — contact your Hermes administrator. They can check the registration event log on Infobip's side.</li>
+  </ul>
+</section>
+
+<footer>
+  Last updated 2026-05-18 · Hermes onboarding guide · WhatsApp Business via Embedded Signup
+</footer>
+
+</div>
+</body>
+</html>

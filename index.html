@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Hermes360 — Infobip Integration Docs</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-faint: #6b6b6b;
+    --rule: #e3e3e3;
+    --accent: #1f6feb;
+    --accent-soft: #eaf2fd;
+    --bg: #fafafa;
+    --card-bg: #fff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.55;
+    font-size: 15px;
+  }
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 48px 28px 64px;
+  }
+  header {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 22px;
+    margin-bottom: 30px;
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+  h1 {
+    font-size: 28px;
+    margin: 8px 0 8px;
+    font-weight: 600;
+  }
+  header p {
+    margin: 6px 0 0;
+    color: var(--ink-soft);
+    font-size: 14.5px;
+  }
+  .cards { display: grid; gap: 14px; }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 18px 20px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  .card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 2px 14px rgba(31,111,235,0.08);
+  }
+  .card:active { transform: translateY(1px); }
+  .card .title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 4px;
+  }
+  .card .desc {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 13.5px;
+  }
+  .card .meta {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+  footer {
+    margin-top: 44px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+  footer a { color: var(--ink-faint); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Hermes360 · Infobip Integration Layer</div>
+  <h1>Project documentation</h1>
+  <p>HTML reference docs for the Hermes ↔ Infobip integration. Pick a document below.</p>
+</header>
+
+<div class="cards">
+
+  <a class="card" href="visual-summary.html">
+    <p class="title">Hermes360 ↔ Infobip — Visual Summary</p>
+    <p class="desc">Architectural overview of how Hermes integrates with Infobip: number provisioning via Embedded Signup (Tech Provider Program), controller surface, ER model, and open questions.</p>
+    <p class="meta">For: engineers and architects · Internal reference</p>
+  </a>
+
+  <a class="card" href="tenant-whatsapp-onboarding-guide.html">
+    <p class="title">Connect a WhatsApp number to Hermes — Tenant guide</p>
+    <p class="desc">Step-by-step guide for tenants onboarding a WhatsApp Business number through Hermes. Covers prerequisites on Meta's side and the in-Hermes flow.</p>
+    <p class="meta">For: tenants / end-customers · Onboarding</p>
+  </a>
+
+</div>
+
+<footer>
+  Last updated 2026-05-18 · Hermes360 — Messaging Provider Integration Layer (Infobip)
+</footer>
+
+</div>
+</body>
+</html>
