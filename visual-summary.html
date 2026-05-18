@@ -1626,10 +1626,20 @@ mindmap
                             <!-- Provider-specific form (Infobip · WhatsApp) — Embedded Signup launcher -->
                             <div style="background:#fff8e1;border-left:4px solid #d4a72c;padding:10px 12px;border-radius:4px;margin:12px 0 10px;">
                                 <b style="font-size:12.5px;">Infobip — WhatsApp enrolment via Meta Embedded Signup</b>
-                                <p class="ui-chip-row" style="margin:3px 0 0;">The tenant launches <b>Meta's Embedded Signup widget</b> (Meta Facebook JS SDK, hosted by Hermes as a Tech Provider, against Infobip's <code>solutionId</code>). All Meta-side details — legal name, display name, category, business profile — are collected by Meta directly from the tenant's Facebook Business Manager. On completion, Hermes captures <code>wabaId</code> + <code>phoneNumberId</code> from the ES callback and forwards them to Infobip via <code>POST /whatsapp/1/embedded-signup/registrations/share-waba</code>.</p>
+                                <p class="ui-chip-row" style="margin:3px 0 0;">The tenant launches <b>Meta's Embedded Signup widget</b> (Meta Facebook JS SDK, hosted by Hermes as a Tech Provider, against Infobip's <code>solutionId</code>). All Meta-side details — legal name, display name, category, business profile — are collected by Meta directly from the tenant's Facebook Business Manager. On completion, Hermes captures <code>wabaId</code> + <code>phoneNumberId</code> from the ES callback and forwards them to Infobip via <code>POST /whatsapp/1/embedded-signup/registrations/share-waba</code>. <b>If the number is already in use with another provider</b> (Twilio, 360dialog, Meta-direct, etc.), Meta detects it inside ES and offers to <b>migrate</b> the WABA — the tenant is prompted for the existing two-step verification PIN, and on success the WABA is re-claimed under Hermes' Tech Provider / Infobip BSP. The migration path returns the same callback shape as a fresh signup, so no separate Hermes code path is needed.</p>
+                            </div>
+                            <!-- Prerequisites callout for the tenant -->
+                            <div style="background:#eef3fa;border-left:4px solid #1f4e8c;padding:10px 12px;border-radius:4px;margin:0 0 12px;">
+                                <b style="font-size:12.5px;">Before launching — tenant should have:</b>
+                                <ul style="margin:6px 0 0;padding-left:20px;font-size:12px;color:#1a2733;line-height:1.55;">
+                                    <li>A <b>Meta Business Manager</b> account they can log in to (admin role).</li>
+                                    <li>Their <b>phone</b> nearby to receive Meta's SMS / voice verification code.</li>
+                                    <li>If the number is currently used in the <b>consumer WhatsApp / WhatsApp Business mobile app</b>, that account must be deleted first — Meta will otherwise refuse the registration.</li>
+                                    <li>If the number <b>already has a WABA with another BSP</b>, the existing <b>two-step verification PIN</b> (or knowledge that they can reset it via Meta — a 7-day recovery wait).</li>
+                                </ul>
                             </div>
                             <div class="ui-field" style="background:#fff;border:1px dashed #cbd5e1;border-radius:6px;padding:18px;text-align:center;">
-                                <p style="margin:0 0 10px;font-size:12.5px;color:#475569;">Click below to open Meta's Embedded Signup. The tenant will sign in with their Facebook account and select / create a WhatsApp Business Account.</p>
+                                <p style="margin:0 0 10px;font-size:12.5px;color:#475569;">Click below to open Meta's Embedded Signup. The tenant will sign in with their Facebook account and select / create — or migrate — a WhatsApp Business Account.</p>
                                 <button class="ui-btn ui-btn-primary" style="background:#1877f2;">Launch Embedded Signup</button>
                                 <p class="ui-chip-row" style="margin:10px 0 0;">Status arrives asynchronously via webhook: <code>IN_PROGRESS</code> → <code>FINISHED</code>, or <code>FAILED</code>. Automatic Resource Association will create the matching <code>entityId</code> for the tenant's Business Manager ID.</p>
                             </div>
