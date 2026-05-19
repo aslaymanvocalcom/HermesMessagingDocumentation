@@ -416,16 +416,17 @@ mindmap
 
     <h2>10. Proposed MSSQL Tables</h2>
     <p style="font-size:13.5px;">All passthrough today — no DB persistence in Hermes. Existing <code>Customer</code> table stays untouched. <b>Infobip connection settings (<code>BaseUrl</code>, <code>ApiKey</code>) stay in <code>appsettings.json</code></b> — moving them to the DB would require runtime decryption on every send, with no upside given a single per-deployment key. The <code>InfobipConfiguration</code> table below stores only <b>observed/derived state</b> (health-check results, fingerprints, sync metadata), never the secret itself.</p>
+    <p style="font-size:13.5px;"><b>Scope note (revised 2026-05-19).</b> The earlier draft proposed an <code>InfobipProvisioningJob</code> audit/retry log to capture every entity, number, and configuration call Hermes makes against Infobip. That table is <b>dropped</b> — the surface it was meant to cover is now small (one-time bootstrap + idempotent re-reads), each operation already writes <code>LastSyncAt</code> / <code>LastError</code> on its own row, and standard application logging is sufficient for post-mortems. <code>InfobipWhatsappTemplate</code> is added in its place to back the (currently passthrough) WA templates surface — list / status / dedup all become local DB queries.</p>
     <p style="font-size:13.5px;"><b>Naming convention:</b> every Infobip-related table uses the <code>Infobip</code> prefix (PascalCase in SQL/EF, <code>INFOBIP_</code> in the ER diagram below). This keeps the integration layer cleanly grouped and easy to grep.</p>
     <div class="mermaid">
         erDiagram
         INFOBIP_CONFIGURATION ||--o{ INFOBIP_APPLICATION : "applies to"
         INFOBIP_CUSTOMER_MAPPING ||--o{ INFOBIP_PHONE_NUMBER : owns_via_customer
-        INFOBIP_PHONE_NUMBER ||--o{ INFOBIP_PROVISIONING_JOB : tracked_by
-        INFOBIP_APPLICATION ||--o{ INFOBIP_PROVISIONING_JOB : context
         INFOBIP_APPLICATION ||--o{ INFOBIP_MESSAGE_DISPATCH : "use case context"
         INFOBIP_CUSTOMER_MAPPING ||--o{ INFOBIP_MESSAGE_DISPATCH : "sent on behalf of"
         INFOBIP_MESSAGE_DISPATCH ||--o| INFOBIP_MESSAGE_DISPATCH : "retry_of (self FK)"
+        INFOBIP_CUSTOMER_MAPPING ||--o{ INFOBIP_WHATSAPP_TEMPLATE : owns
+        INFOBIP_PHONE_NUMBER ||--o{ INFOBIP_WHATSAPP_TEMPLATE : "registered on sender"
         INFOBIP_CONFIGURATION {
         int Id PK
         string BaseUrl
@@ -487,15 +488,24 @@ mindmap
         datetime CreatedAt
         datetime UpdatedAt
         }
-        INFOBIP_PROVISIONING_JOB {
+        INFOBIP_WHATSAPP_TEMPLATE {
         int Id PK
-        string ResourceType
-        string ResourceId
-        string Action
-        string State
-        int Attempts
+        int CustomerId FK "Hermes tenant"
+        string Sender "WABA-registered MSISDN that owns the template"
+        string Name "template name (Meta-side identifier)"
+        string Language "BCP-47 language code"
+        string Category "MARKETING / UTILITY / AUTHENTICATION"
+        string Status "PENDING_APPROVAL / APPROVED / REJECTED / PAUSED / DISABLED"
+        string StructureJson "approved structure: header / body / buttons / footer"
+        string ContentHash "SHA-256 of normalized structure — soft-dedup detector"
+        string MetaTemplateId "Meta-side id (filled when known)"
+        string RejectionReason
+        string QualityRating "GREEN / YELLOW / RED — last value reported by Meta"
+        datetime SubmittedAt
+        datetime ApprovedAt
+        datetime LastEditedAt "for the 24h cooldown / 10-edits-per-month gates"
+        datetime LastSyncedAt
         string LastError
-        datetime LastAttemptAt
         datetime CreatedAt
         datetime UpdatedAt
         }
@@ -538,7 +548,7 @@ mindmap
             <tr><td><code>InfobipApplication</code> <b>(enriched)</b></td><td>Use case → Infobip <code>applicationId</code> binding (one row per Hermes use case, e.g. Speed2Lead). Now also carries the human-readable <code>ApplicationName</code>, default channel, callback URL, and last-sync diagnostics so the bootstrap idempotency check has somewhere to write its result.</td><td><code>ApplicationId</code>, <code>ApplicationName</code>, <code>UseCase</code>, <code>DefaultChannel</code>, <code>Status</code>, <code>IsDefault</code>, <code>CallbackUrl</code>, <code>LastSyncAt</code>, <code>LastError</code></td></tr>
             <tr><td><code>InfobipCustomerMapping</code> <b>(renamed from <code>CustomerToInfobip</code>)</b></td><td>1:1 Customer ↔ Infobip Entity binding + provisioning state. Keeps Infobip out of the core <code>Customer</code> table.</td><td><code>CustomerId</code> (FK), <code>InfobipEntityId</code>, <code>InfobipEntityName</code>, <code>ProvisioningState</code>, <code>LastError</code></td></tr>
             <tr><td><code>InfobipPhoneNumber</code> <b>(renamed from <code>phone_number</code>)</b></td><td>Customer-owned MSISDN + registration state machine</td><td><code>CustomerId</code>, <code>Number_E164</code>, <code>InfobipNumberKey</code>, <code>RegistrationState</code></td></tr>
-            <tr><td><code>InfobipProvisioningJob</code></td><td>Audit + retry log for every Infobip call (admin UI feed)</td><td><code>ResourceType</code>, <code>Action</code>, <code>State</code>, <code>Attempts</code></td></tr>
+            <tr><td><code>InfobipWhatsappTemplate</code> <b>(new — WA template cache)</b></td><td><b>One row per <code>(Sender, Name, Language)</code> tuple registered on the WABA.</b> Templates today are pure passthrough (<code>WhatsappTemplatesController</code> forwards JSON to Infobip), so persistence is needed to (a) list/search templates for the admin UI without round-tripping Infobip on every page load, (b) track Meta-controlled lifecycle (<code>PENDING_APPROVAL → APPROVED / REJECTED / PAUSED / DISABLED</code>) over time, (c) gate the edit flow against the 24h cooldown + 10-edits-per-month rules, and (d) flag <b>soft duplicates</b> via <code>ContentHash</code> (same body/buttons across multiple names — allowed by Meta but typically a user mistake). <b>Hard duplicates</b> (same <code>Name + Language</code> on the same sender) are rejected upstream by Meta and surfaced as the raw 4xx from Infobip; the table makes the <i>detection</i> cheap before submission.</td><td><code>Sender</code>, <code>Name</code>, <code>Language</code> (composite unique), <code>Status</code>, <code>Category</code>, <code>ContentHash</code>, <code>QualityRating</code>, <code>LastEditedAt</code></td></tr>
             <tr><td><code>InfobipMessageDispatch</code> <b>(new — message tracking)</b></td><td><b>One row per Infobip <code>messageId</code> (per recipient).</b> Persists the response metadata returned by <code>POST /messages-api/1/messages</code> — <b>never</b> the message body — so DLRs (push or pull), status refresh, error recovery, and retries have a durable handle. A bulk that fans out to N destinations produces N rows sharing the same <code>BulkId</code>. Body, template, variables and media URLs are deliberately excluded for GDPR + storage reasons; if a future feature needs them they go in a separate store and join on <code>MessageId</code>.</td><td><code>MessageId</code> (unique), <code>BulkId</code> (indexed), <code>Destination</code>, <code>InfobipApplicationId</code>, <code>InfobipEntityId</code>, <code>CampaignReferenceId</code>, <code>Channel</code>, <code>LatestStatusGroupName</code>, <code>LatestStatusName</code>, <code>LatestErrorName</code>, <code>LatestErrorIsPermanent</code>, <code>RetryCount</code>, <code>RetryOfMessageId</code>, <code>SentAt</code>, <code>LastStatusRefreshAt</code>, <code>DeliveredAt</code>, <code>FinalizedAt</code></td></tr>
         </tbody>
     </table>
@@ -557,6 +567,18 @@ mindmap
     </p>
     <p style="font-size:13.5px;"><b>Dispatch write path:</b> (1) <b>on send response</b> — one row per <code>MessageAck</code> in the <code>SendMessagesResponse</code> body (initial group is usually <code>PENDING</code>); (2) <b>on DLR push</b> via Subscriptions webhook — match by <code>MessageId</code>, update <code>LatestStatus*</code> / <code>LatestError*</code>, bump <code>LastStatusRefreshAt</code>; (3) <b>on DLR pull</b> via <code>GET /messages-api/1/reports</code> — same shape, used to recover from missed webhooks; (4) <b>refresh worker</b> drains <code>PENDING</code> rows older than the refresh window; (5) <b>retry</b> for non-permanent errors creates a new row with a new <code>MessageId</code> and <code>RetryOfMessageId</code> pointing back, leaving the prior row as the audit trail.</p>
     <p style="font-size:13.5px;"><b>Body NOT stored.</b> No <code>Text</code>, <code>Template</code>, <code>Variables</code>, <code>MediaUrl</code>. Reasons: GDPR data-minimisation (bodies are typically customer PII) and storage growth at send volume. <code>CorrelationData</code> + <code>CallbackData</code> are kept because they are the only durable Hermes-side handles for matching a stray DLR / MO back to a <code>ContactAttempt</code>.</p>
+    <p style="font-size:13.5px;">
+        <b>Template status values</b> (in <code>InfobipWhatsappTemplate.Status</code>, all Meta-controlled — Hermes only reads):
+        <code>PENDING_APPROVAL → APPROVED</code> · <code>REJECTED</code> · <code>PAUSED</code> · <code>DISABLED</code> (terminal-ish — <code>PAUSED</code> can return to <code>APPROVED</code>; <code>DISABLED</code> requires resubmission under a new name).
+    </p>
+    <p style="font-size:13.5px;"><b>Template write path:</b> (1) <b>on create</b> — Hermes forwards <code>POST /api/WhatsappTemplates/{sender}</code> to Infobip; on 2xx, insert a row with <code>Status = PENDING_APPROVAL</code>, compute <code>ContentHash</code> over the normalized structure, stamp <code>SubmittedAt</code>; (2) <b>on edit</b> — same as create but the existing row is updated; <code>LastEditedAt</code> is stamped so the UI can enforce Meta's <b>24h cooldown</b> + <b>10-edits-per-month</b> per template; (3) <b>on list / status read</b> — background sync job reconciles against <code>GET /whatsapp/2/senders/{sender}/templates</code> and updates <code>Status</code>, <code>QualityRating</code>, <code>RejectionReason</code>; (4) <b>on delete</b> — soft-delete (keep the row for audit), then call Infobip <code>DELETE</code>.</p>
+    <p style="font-size:13.5px;"><b>Duplicate-template handling.</b> Meta's uniqueness key is the tuple <code>(WABA, Name, Language)</code> — <b>not</b> the body. Three cases:</p>
+    <ul style="font-size:13.5px;margin-top:0;">
+        <li><b>Same name + same language on the same sender</b> = <b>hard duplicate</b>. Meta rejects, Infobip returns a 4xx (typically 400 with a <code>TEMPLATE_NAME_EXISTS</code>-style error), and Hermes passes that response through unchanged. The local table makes pre-submission detection cheap: query by <code>(Sender, Name, Language)</code> and short-circuit with a 409 before the upstream call.</li>
+        <li><b>Same name, different languages</b> = <b>allowed</b> — these are language variants of one logical template. The table holds one row per variant.</li>
+        <li><b>Same body / structure, different names</b> = <b>allowed by Meta</b>. The <code>ContentHash</code> column flags this as a soft duplicate so the admin UI can warn ("you already have a template with this exact content under the name <i>X</i>") without blocking — it's usually a user mistake but occasionally legitimate (e.g., one template per campaign).</li>
+    </ul>
+    <p style="font-size:13.5px;"><b>Body deliberately stored here</b> (unlike <code>InfobipMessageDispatch</code>) — template structures are catalog assets, not per-recipient PII; Meta itself stores them in cleartext on its review side.</p>
     <p style="font-size:13.5px;">
         <b>Health status values</b> (in <code>InfobipConfiguration.HealthStatus</code>):
         <code>Healthy</code> (last probe &lt; interval &amp; HTTP 2xx) <code>→ Degraded</code> (1–2 consecutive failures or latency &gt; threshold) <code>→ Unhealthy</code> (≥ 3 consecutive failures) <code>→ Unknown</code> (never probed since boot).

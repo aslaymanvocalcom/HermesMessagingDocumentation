@@ -14,8 +14,8 @@
 | Webhook subscriptions | §6 webhook handlers | **CRUD surface in place** (`/api/Subscriptions/{channel}`). Inbound webhook receiver + resource-lifecycle handlers NOT built yet. |
 | WhatsApp templates | (added scope) | **Shipped.** `/api/WhatsappTemplates/{sender}` CRUD passthrough. Status is Meta-controlled (read-only from our side). |
 | Deployer config (`InfobipOptions`) | §4 `InfobipClient`, §7 step 1 | **Today: single account-level API key + base URL in `appsettings.json`.** No encryption-at-rest, no validation endpoint, no admin UI — these remain follow-ups. |
-| Provisioning job audit (`infobip_provisioning_job`) | §3 new tables | **NOT built.** |
 | Message-dispatch tracking (`InfobipMessageDispatch`) | §3 new tables | **NOT built.** Body is intentionally out of scope — only response metadata (BulkId, MessageId, destination, latest status, error code) so DLR refresh / status recovery / retry have a durable handle. |
+| WhatsApp template cache (`InfobipWhatsappTemplate`) | §3 new tables | **NOT built.** Templates today are pure passthrough to Infobip; the local row will back list/search in the admin UI, Meta-side lifecycle tracking (`PENDING_APPROVAL → APPROVED / REJECTED / PAUSED / DISABLED`), the 24h-cooldown / 10-edits-per-month gates on edit, and soft-duplicate detection via `ContentHash`. See visual-summary §10. |
 | WhatsApp/Meta verification webhooks | §6, §11 phase 3 | **NOT built.** Verification status must be polled or surfaced manually until then. |
 
 ### Wire-name gotchas captured during the outbound roundtrip
@@ -69,7 +69,34 @@ Registration states: `requested` → `procuring` → `pending_registration` → 
 
 **`campaign_phone_number`** *(deferred — not built in the current cut)* — junction table linking campaigns to phone numbers. Many-to-many within a customer. Fields: `campaign_id`, `phone_number_id`, `role` (e.g., primary/secondary/inbound), `assigned_at`. Allows the same number to be used by multiple campaigns of the same customer.
 
-**`infobip_provisioning_job`** *(deferred — not built in the current cut)* — audit and retry log. Captures every entity, number, and configuration call Hermes makes against Infobip. Fields: `resource_type`, `resource_id`, `action`, `state`, `attempts`, `last_error`, `last_attempt_at`. Powers the admin retry UI and post-mortem investigation.
+**`InfobipWhatsappTemplate`** *(planned — not built in the current cut)* —
+**one row per `(Sender, Name, Language)` tuple registered on the WABA.**
+Backs the (currently passthrough) `/api/WhatsappTemplates/{sender}` CRUD
+surface so list/status/dedup don't have to round-trip Infobip on every
+admin page load. Fields: `CustomerId` (FK), `Sender`, `Name`, `Language`,
+`Category` (`MARKETING` / `UTILITY` / `AUTHENTICATION`), `Status`
+(Meta-controlled — `PENDING_APPROVAL` → `APPROVED` / `REJECTED` /
+`PAUSED` / `DISABLED`), `StructureJson` (approved header / body /
+buttons / footer), `ContentHash` (SHA-256 over normalized structure —
+soft-dedup detector), `MetaTemplateId`, `RejectionReason`,
+`QualityRating` (`GREEN` / `YELLOW` / `RED`), `SubmittedAt`,
+`ApprovedAt`, `LastEditedAt` (for Meta's 24h cooldown + 10-edits-
+per-month per template), `LastSyncedAt`, `LastError`, `CreatedAt`,
+`UpdatedAt`. Composite unique index on `(Sender, Name, Language)`
+mirrors Meta's own uniqueness key.
+
+Duplicate handling. Meta's uniqueness key is `(WABA, Name, Language)`,
+not the body. Same name + same language on the same sender is a **hard
+duplicate** — Meta rejects, Infobip surfaces a 4xx, Hermes passes the
+upstream response through unchanged; the local row lets us short-circuit
+with a 409 before the call goes out. Same name with different languages
+is **allowed** (those are language variants of one logical template).
+Same structure under different names is **allowed by Meta** but flagged
+via `ContentHash` as a soft duplicate so the admin UI can warn the user.
+
+Unlike `InfobipMessageDispatch`, the template body **is** stored here —
+templates are catalog assets (not per-recipient PII) and Meta itself
+holds them in cleartext for review.
 
 **`InfobipMessageDispatch`** *(planned — not built in the current cut)* —
 **one row per Infobip `messageId` (per recipient)**. Persists only the
@@ -115,7 +142,7 @@ feature ever needs them; it would join on `MessageId`.
 
 **`InfobipClient`** — new internal library. Wraps every Infobip HTTP call. Reads the base URL and API key from `infobip_deployment_config` (cached in memory with a reload on rotation). Owns retry policy, idempotency keys, timeout handling, and the per-endpoint wire-name conventions we've already documented (`entityName`, `applicationName`, `results/paging`, etc.). All Infobip calls in Hermes must go through this client. Must redact the API key in all logs and error reports.
 
-**`InfobipProvisioningService`** — service layer with the high-level operations: `createEntity(customer)`, `readEntity(customer)` (with wire-name verification), `createApplication()` (invoked by the startup bootstrap routine), `registerNumber(phoneNumber)`, `syncNumberStatus(phoneNumber)`, `bindSenderToEntity(...)`. Each operation is idempotent and writes a row to `infobip_provisioning_job`.
+**`InfobipProvisioningService`** — service layer with the high-level operations: `createEntity(customer)`, `readEntity(customer)` (with wire-name verification), `createApplication()` (invoked by the startup bootstrap routine), `registerNumber(phoneNumber)`, `syncNumberStatus(phoneNumber)`, `bindSenderToEntity(...)`. Each operation is idempotent. Per-row diagnostics (`LastSyncAt` / `LastError` on `InfobipCustomerMapping`, `InfobipApplication`, `InfobipPhoneNumber`) capture state; standard application logging covers post-mortems. (The earlier draft proposed a dedicated `infobip_provisioning_job` audit table — dropped in the 2026-05-19 revision, see visual-summary §10.)
 
 **`InfobipConfigService`** — manages the deployer's Infobip credentials: store, encrypt at rest, validate (test connectivity against Infobip), rotate, surface health to the admin UI.
 
