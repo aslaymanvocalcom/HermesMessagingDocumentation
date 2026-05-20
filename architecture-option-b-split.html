@@ -185,14 +185,14 @@ flowchart LR
   <li class="w">Newtonsoft.Json, not <code>System.Text.Json</code>. Polly v7, not v8.</li>
   <li class="w">No <code>IAsyncEnumerable</code>, no nullable reference types on the public API.</li>
   <li class="x">EF Core stays out of the shared library — persistence is HermesWebHooks-local, not a shared contract.</li>
-  <li class="p">Distribute via internal NuGet feed (separate repos today).</li>
+  <li class="p">Consumed as a direct project reference (<code>&lt;ProjectReference&gt;</code>) — no NuGet packaging.</li>
 </ul>
 
 <h2>Roadmap</h2>
 <div class="roadmap"><div class="p">P0</div><div class="b"><b>Commit.</b> netstandard2.0 shared lib; provisioning in Admin; runtime in HermesWebHooks (stays on net8.0).</div></div>
-<div class="roadmap"><div class="p b">P1</div><div class="b"><b>Stand up <code>Library/Infobip.Integration.Shared</code>.</b> Port client + DTOs from HermesMessaging. Publish to internal NuGet.</div></div>
+<div class="roadmap"><div class="p b">P1</div><div class="b"><b>Stand up <code>Library/Infobip.Integration.Shared</code>.</b> Port client + DTOs from HermesMessaging. Lives in the repo and is consumed as a project reference by both Admin and HermesWebHooks.</div></div>
 <div class="roadmap"><div class="p g">P2</div><div class="b"><b>Provisioning controllers in Admin</b> (WebAPI 2). Persist mappings in config DB. Wire WebAdmin UI panels.</div></div>
-<div class="roadmap"><div class="p g">P3</div><div class="b"><b>Runtime controllers in HermesWebHooks</b> — <code>Speed2LeadMessagesController</code>, <code>WebhooksController</code>. Reference shared library via PackageReference.</div></div>
+<div class="roadmap"><div class="p g">P3</div><div class="b"><b>Runtime controllers in HermesWebHooks</b> — <code>Speed2LeadMessagesController</code>, <code>WebhooksController</code>. Add <code>&lt;ProjectReference&gt;</code> to the shared library.</div></div>
 <div class="roadmap"><div class="p y">P4</div><div class="b"><b>EF Core 8 dispatch table</b> in HermesWebHooks. Migrations checked in.</div></div>
 <div class="roadmap"><div class="p y">P5</div><div class="b"><b><code>IInboundForwarder</code> wiring</b> — REST / DB / fan-out implementation matching the deployment's downstream consumer.</div></div>
 <div class="roadmap"><div class="p b">P6</div><div class="b"><b>Sunset legacy <code>InfoBip</code> plugin</b> after parity on <code>xr5e2e</code>.</div></div>
