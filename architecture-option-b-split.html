@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Architecture · Option B — Admin (net472) + HermesWebHooks (net8) split, bridged by netstandard2.0</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 32px 40px 60px;
+    color: #1a1a1a;
+    background: #fafafa;
+    line-height: 1.5;
+    font-size: 14.5px;
+  }
+  h1 {
+    font-size: 26px;
+    border-bottom: 3px solid #e2336b;
+    padding-bottom: 8px;
+    margin: 0 0 4px;
+  }
+  h2 {
+    font-size: 18px;
+    color: #e2336b;
+    margin-top: 32px;
+    border-left: 4px solid #e2336b;
+    padding-left: 10px;
+  }
+  .subtitle { color: #666; font-size: 13.5px; margin: 4px 0 18px; }
+  .verdict {
+    background: #fff;
+    border-left: 4px solid #e2336b;
+    padding: 12px 16px;
+    margin: 14px 0 18px;
+    border-radius: 4px;
+    font-size: 13.5px;
+  }
+  .verdict b { color: #e2336b; }
+  .mermaid {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 16px;
+    margin: 10px 0;
+    text-align: center;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    background: #fff;
+    font-size: 13px;
+  }
+  th, td {
+    border: 1px solid #d8d8d8;
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #f3f3f3; font-weight: 600; }
+  tr:nth-child(even) td { background: #fafafa; }
+  code {
+    background: #f0f0f0;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12.5px;
+    color: #c0265d;
+  }
+  td.g { color: #2ea043; font-weight: 600; }
+  td.r { color: #cf222e; font-weight: 600; }
+  ul.k { list-style: none; padding-left: 0; margin: 8px 0; }
+  ul.k li { padding-left: 22px; position: relative; margin: 4px 0; font-size: 13.5px; }
+  ul.k li.p::before { content: "✓"; position: absolute; left: 0; color: #2ea043; font-weight: 700; }
+  ul.k li.w::before { content: "!"; position: absolute; left: 0; color: #d4a72c; font-weight: 700; }
+  ul.k li.x::before { content: "✗"; position: absolute; left: 0; color: #cf222e; font-weight: 700; }
+  .roadmap { display: grid; grid-template-columns: 44px 1fr; gap: 0; margin: 4px 0; }
+  .roadmap .p {
+    background: #e2336b; color: #fff; font-weight: 700;
+    padding: 8px; text-align: center; border-radius: 5px 0 0 5px;
+    font-size: 12px; display: flex; align-items: center; justify-content: center;
+  }
+  .roadmap .p.g { background: #2ea043; }
+  .roadmap .p.y { background: #d4a72c; }
+  .roadmap .p.b { background: #1f6feb; }
+  .roadmap .b {
+    background: #fff; border: 1px solid #e0e0e0; border-left: 0;
+    border-radius: 0 5px 5px 0; padding: 7px 12px; font-size: 13px;
+  }
+  .roadmap + .roadmap { margin-top: 4px; }
+  .nav { font-size: 13px; margin-bottom: 8px; }
+  .nav a { color: #1f6feb; text-decoration: none; }
+  .nav a:hover { text-decoration: underline; }
+  footer {
+    margin-top: 40px; padding-top: 12px; border-top: 1px solid #e3e3e3;
+    font-size: 12px; color: #6b6b6b;
+  }
+</style>
+</head>
+<body>
+
+<p class="nav"><a href="index.html">← Documentation index</a></p>
+
+<h1>Option B — Admin + HermesWebHooks split</h1>
+<p class="subtitle">Provisioning in Admin (net472), runtime in HermesWebHooks (net8.0), bridged by a .NET Standard 2.0 shared library in <code>Library/Infobip.Integration.Shared</code>.</p>
+
+<div class="verdict">
+  <b>Verdict.</b> Split along the existing management-plane / data-plane fault line. Admin owns provisioning (what it's already for); HermesWebHooks owns runtime (where the legacy InfoBip plugin already does the same job). The shared library targets netstandard2.0 so net472 and net8.0 reference one assembly — <b>no HermesWebHooks port required</b>.
+</div>
+
+<h2>Architecture</h2>
+<div class="mermaid">
+flowchart LR
+  classDef admin fill:#eaf2fd,stroke:#1f6feb,color:#1a1a1a
+  classDef runtime fill:#e8f5e9,stroke:#2ea043,color:#1a1a1a
+  classDef shared fill:#f3e8ff,stroke:#8b5cf6,color:#1a1a1a
+  classDef store fill:#fff4e5,stroke:#d4a72c,color:#1a1a1a
+  classDef ext fill:#f3f3f3,stroke:#999,color:#1a1a1a,stroke-dasharray:3 3
+
+  subgraph Admin["Hermes Admin (net472)"]
+    direction TB
+    UI["WebAdmin UI"]:::admin
+    Prov["ApplicationsController · EntitiesController ·<br/>WhatsappTemplatesController · SubscriptionsController ·<br/>NumbersController"]:::admin
+    AdminDB[("Hermes Config DB<br/>tenants · credentials · mappings")]:::store
+    UI --> Prov
+    Prov --> AdminDB
+  end
+
+  subgraph Shared["Library/Infobip.Integration.Shared (.NET Standard 2.0)"]
+    direction TB
+    Client["IInfobipClient (typed HttpClient)<br/>DTOs · Options · Policies"]:::shared
+  end
+
+  subgraph WH["HermesWebHooks (net8.0)"]
+    direction TB
+    Send["Speed2LeadMessagesController"]:::runtime
+    Hook["WebhooksController (DLR · MO · SEEN)"]:::runtime
+    Fwd["IInboundForwarder (REST · DB · fan-out)"]:::runtime
+    Disp[("InfobipMessageDispatch<br/>EF Core 8")]:::store
+    Send & Hook --> Disp
+    Hook --> Fwd
+  end
+
+  Prov --> Client
+  Send & Hook --> Client
+
+  Infobip["Infobip Cloud"]:::ext
+  Consumer["Downstream consumer<br/>(Speed2Lead / CRM)"]:::ext
+
+  Client -- outbound --> Infobip
+  Infobip -- webhooks --> Hook
+  Fwd --> Consumer
+  Consumer -- outbound send --> Send
+  AdminDB -. "tenant creds at startup" .-> Send
+</div>
+
+<h2>Where each piece lives</h2>
+<table>
+  <thead><tr><th>Concern</th><th>Module</th><th>Framework</th></tr></thead>
+  <tbody>
+    <tr><td>Provisioning controllers (Apps, Entities, Templates, Subscriptions, Numbers)</td><td>Admin / Web_Service</td><td>net472 (WebAPI 2)</td></tr>
+    <tr><td>Tenant config + credentials persistence</td><td>Admin config DB</td><td>—</td></tr>
+    <tr><td>Outbound send (<code>messages-api/1</code>)</td><td>HermesWebHooks</td><td>net8.0 (ASP.NET Core)</td></tr>
+    <tr><td>Inbound webhooks + <code>IInboundForwarder</code></td><td>HermesWebHooks</td><td>net8.0</td></tr>
+    <tr><td><code>InfobipMessageDispatch</code> persistence</td><td>HermesWebHooks</td><td>EF Core 8</td></tr>
+    <tr><td>Typed client, DTOs, options, retry policies</td><td><code>Library/Infobip.Integration.Shared</code></td><td><b>.NET Standard 2.0</b></td></tr>
+  </tbody>
+</table>
+
+<h2>Why .NET Standard 2.0 for the shared library</h2>
+<table>
+  <thead><tr><th>Target</th><th>Admin (net472)</th><th>HermesWebHooks (net8.0)</th><th>Verdict</th></tr></thead>
+  <tbody>
+    <tr><td><code>net472</code></td><td class="g">✓</td><td class="r">✗ can't reference</td><td class="r">Forces HermesWebHooks port</td></tr>
+    <tr><td><code>netstandard2.1</code></td><td class="r">✗ unsupported</td><td class="g">✓</td><td class="r">Excludes Admin</td></tr>
+    <tr><td><b><code>netstandard2.0</code></b></td><td class="g">✓ (4.7.2+)</td><td class="g">✓</td><td class="g"><b>Picked</b></td></tr>
+  </tbody>
+</table>
+
+<h2>Constraints on the shared library</h2>
+<ul class="k">
+  <li class="w">Pin <code>Microsoft.Extensions.*</code> to ≤ 5.0.x (newer drops netstandard2.0).</li>
+  <li class="w">Newtonsoft.Json, not <code>System.Text.Json</code>. Polly v7, not v8.</li>
+  <li class="w">No <code>IAsyncEnumerable</code>, no nullable reference types on the public API.</li>
+  <li class="x">EF Core stays out of the shared library — persistence is HermesWebHooks-local, not a shared contract.</li>
+  <li class="p">Distribute via internal NuGet feed (separate repos today).</li>
+</ul>
+
+<h2>Roadmap</h2>
+<div class="roadmap"><div class="p">P0</div><div class="b"><b>Commit.</b> netstandard2.0 shared lib; provisioning in Admin; runtime in HermesWebHooks (stays on net8.0).</div></div>
+<div class="roadmap"><div class="p b">P1</div><div class="b"><b>Stand up <code>Library/Infobip.Integration.Shared</code>.</b> Port client + DTOs from HermesMessaging. Publish to internal NuGet.</div></div>
+<div class="roadmap"><div class="p g">P2</div><div class="b"><b>Provisioning controllers in Admin</b> (WebAPI 2). Persist mappings in config DB. Wire WebAdmin UI panels.</div></div>
+<div class="roadmap"><div class="p g">P3</div><div class="b"><b>Runtime controllers in HermesWebHooks</b> — <code>Speed2LeadMessagesController</code>, <code>WebhooksController</code>. Reference shared library via PackageReference.</div></div>
+<div class="roadmap"><div class="p y">P4</div><div class="b"><b>EF Core 8 dispatch table</b> in HermesWebHooks. Migrations checked in.</div></div>
+<div class="roadmap"><div class="p y">P5</div><div class="b"><b><code>IInboundForwarder</code> wiring</b> — REST / DB / fan-out implementation matching the deployment's downstream consumer.</div></div>
+<div class="roadmap"><div class="p b">P6</div><div class="b"><b>Sunset legacy <code>InfoBip</code> plugin</b> after parity on <code>xr5e2e</code>.</div></div>
+
+<footer>
+  Companion: <a href="architecture-option-a-single-host.html">Option A — Single host (HermesWebHooks net8.0)</a> · Last updated 2026-05-20
+</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "default",
+    flowchart: { curve: "basis", htmlLabels: true }
+  });
+</script>
+</body>
+</html>

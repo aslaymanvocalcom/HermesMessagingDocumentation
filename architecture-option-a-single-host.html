@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Architecture · Option A — Single host (HermesWebHooks net8.0)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 32px 40px 60px;
+    color: #1a1a1a;
+    background: #fafafa;
+    line-height: 1.5;
+    font-size: 14.5px;
+  }
+  h1 {
+    font-size: 26px;
+    border-bottom: 3px solid #e2336b;
+    padding-bottom: 8px;
+    margin: 0 0 4px;
+  }
+  h2 {
+    font-size: 18px;
+    color: #e2336b;
+    margin-top: 32px;
+    border-left: 4px solid #e2336b;
+    padding-left: 10px;
+  }
+  .subtitle { color: #666; font-size: 13.5px; margin: 4px 0 18px; }
+  .verdict {
+    background: #fff;
+    border-left: 4px solid #e2336b;
+    padding: 12px 16px;
+    margin: 14px 0 18px;
+    border-radius: 4px;
+    font-size: 13.5px;
+  }
+  .verdict b { color: #e2336b; }
+  .mermaid {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 16px;
+    margin: 10px 0;
+    text-align: center;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    background: #fff;
+    font-size: 13px;
+  }
+  th, td {
+    border: 1px solid #d8d8d8;
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #f3f3f3; font-weight: 600; }
+  tr:nth-child(even) td { background: #fafafa; }
+  code {
+    background: #f0f0f0;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12.5px;
+    color: #c0265d;
+  }
+  ul.k { list-style: none; padding-left: 0; margin: 8px 0; }
+  ul.k li { padding-left: 22px; position: relative; margin: 4px 0; font-size: 13.5px; }
+  ul.k li.p::before { content: "✓"; position: absolute; left: 0; color: #2ea043; font-weight: 700; }
+  ul.k li.w::before { content: "!"; position: absolute; left: 0; color: #d4a72c; font-weight: 700; }
+  ul.k li.x::before { content: "✗"; position: absolute; left: 0; color: #cf222e; font-weight: 700; }
+  .roadmap { display: grid; grid-template-columns: 44px 1fr; gap: 0; margin: 4px 0; }
+  .roadmap .p {
+    background: #e2336b; color: #fff; font-weight: 700;
+    padding: 8px; text-align: center; border-radius: 5px 0 0 5px;
+    font-size: 12px; display: flex; align-items: center; justify-content: center;
+  }
+  .roadmap .p.g { background: #2ea043; }
+  .roadmap .p.y { background: #d4a72c; }
+  .roadmap .p.b { background: #1f6feb; }
+  .roadmap .b {
+    background: #fff; border: 1px solid #e0e0e0; border-left: 0;
+    border-radius: 0 5px 5px 0; padding: 7px 12px; font-size: 13px;
+  }
+  .roadmap + .roadmap { margin-top: 4px; }
+  .nav { font-size: 13px; margin-bottom: 8px; }
+  .nav a { color: #1f6feb; text-decoration: none; }
+  .nav a:hover { text-decoration: underline; }
+  footer {
+    margin-top: 40px; padding-top: 12px; border-top: 1px solid #e3e3e3;
+    font-size: 12px; color: #6b6b6b;
+  }
+</style>
+</head>
+<body>
+
+<p class="nav"><a href="index.html">← Documentation index</a></p>
+
+<h1>Option A — Single host (HermesWebHooks net8.0)</h1>
+<p class="subtitle">New Infobip integration lives in HermesWebHooks as sibling controllers — not as plugins. No new deployable.</p>
+
+<div class="verdict">
+  <b>Verdict.</b> Admin is .NET Framework 4.8 and cannot host modern typed-<code>HttpClient</code> ASP.NET Core code. HermesWebHooks is the only viable host inside the existing repo. Add new controllers next to <code>PluginsController</code>/<code>VMSController</code>; downgrade new code from net10 → net8; keep legacy InfoBip plugin (<code>ccaas/1</code>) running side-by-side until P5 sunset.
+</div>
+
+<h2>Architecture</h2>
+<div class="mermaid">
+flowchart LR
+  classDef new fill:#e8f5e9,stroke:#2ea043,color:#1a1a1a
+  classDef legacy fill:#fff4e5,stroke:#d4a72c,color:#1a1a1a
+  classDef store fill:#eaf2fd,stroke:#1f6feb,color:#1a1a1a
+  classDef ext fill:#f3f3f3,stroke:#999,color:#1a1a1a,stroke-dasharray:3 3
+
+  subgraph WH["HermesWebHooks (net8.0, single IIS site)"]
+    direction TB
+    subgraph New["New Infobip face — sibling controllers"]
+      Prov["Applications · Entities · Templates ·<br/>Subscriptions · Numbers"]:::new
+      Send["Speed2LeadMessagesController"]:::new
+      Hook["WebhooksController (DLR · MO · SEEN)"]:::new
+      Fwd["IInboundForwarder<br/>(REST · DB · fan-out)"]:::new
+      Client["IInfobipClient (typed HttpClient)"]:::new
+    end
+    subgraph Legacy["Legacy plugin face (unchanged until P5)"]
+      EP["/plugins/endpoint/{...}"]:::legacy
+      IB["InfoBip plugin (ccaas/1)"]:::legacy
+    end
+    DB[("InfobipMessageDispatch<br/>EF Core 8 · own schema")]:::store
+    Prov & Send --> Client
+    Send & Hook --> DB
+    Hook --> Fwd
+    EP --> IB
+  end
+
+  Infobip["Infobip Cloud<br/>messages-api/1"]:::ext
+  Consumer["Downstream consumer<br/>(Speed2Lead / CRM)"]:::ext
+  Admin["Hermes Admin (net48)<br/>config DB · WebAdmin UI"]:::ext
+
+  Client -- outbound --> Infobip
+  Infobip -- webhooks --> Hook
+  Infobip -- legacy DLR --> EP
+  Fwd --> Consumer
+  Consumer -- outbound send --> Send
+  Admin -- config push --> WH
+  Admin -. "status read (optional UI)" .-> Prov
+</div>
+
+<h2>Where each piece lives</h2>
+<table>
+  <thead><tr><th>Concern</th><th>Location</th></tr></thead>
+  <tbody>
+    <tr><td>Provisioning (Apps / Entities / Templates / Subscriptions / Numbers)</td><td><code>HermesWebHooksApp/Controllers/Infobip/*</code></td></tr>
+    <tr><td>Outbound send (<code>messages-api/1</code>)</td><td><code>Speed2LeadMessagesController</code> → writes dispatch row</td></tr>
+    <tr><td>Inbound webhooks (DLR / MO / SEEN)</td><td><code>WebhooksController</code> → updates dispatch + <code>IInboundForwarder</code></td></tr>
+    <tr><td>Typed client, DTOs, options</td><td>New class library <code>Infobip.Integration</code> (net8.0)</td></tr>
+    <tr><td><code>InfobipMessageDispatch</code> persistence</td><td>EF Core 8, own schema — <b>not</b> REDISLayer KV</td></tr>
+    <tr><td>Tenant credentials</td><td>Admin config DB (existing pattern)</td></tr>
+    <tr><td>Admin UI status panels</td><td>WebAdmin reads HermesWebHooks REST</td></tr>
+  </tbody>
+</table>
+
+<h2>Key constraints</h2>
+<ul class="k">
+  <li class="p">Sibling controllers, not <code>IProviderPlugin</code> implementations — no plugin-contract drag.</li>
+  <li class="p">New code downgrades net10 → net8.0 (no breaking APIs used; drop Aspire).</li>
+  <li class="w">Two HTTP libraries coexist in-process: RestSharp (legacy plugins) + typed <code>HttpClient</code> (new code).</li>
+  <li class="w">Disambiguate inbound: legacy plugin handles campaign-keyed traffic; new controller handles <code>applicationId</code>/<code>entityId</code>-keyed traffic.</li>
+  <li class="x">Do not reuse <code>REDISLayer</code> KV for the dispatch table — needs indexed lookups and atomic status updates.</li>
+  <li class="x">Do not put new code in Admin/Web_Service — net48 cannot host the modern stack.</li>
+</ul>
+
+<h2>Roadmap</h2>
+<div class="roadmap"><div class="p">P0</div><div class="b"><b>Commit.</b> New <code>Infobip.Integration</code> library + Infobip controllers folder in <code>HermesWebHooksApp</code>. Document decision.</div></div>
+<div class="roadmap"><div class="p g">P1</div><div class="b"><b>Port client + DTOs net10 → net8.</b> Drop Aspire. Keep typed <code>HttpClient</code>, <code>IOptions</code>, <code>System.Text.Json</code>.</div></div>
+<div class="roadmap"><div class="p g">P2</div><div class="b"><b>Wire provisioning + outbound controllers</b> into <code>HermesWebHooksApp</code>. Add <code>"Infobip"</code> appsettings section.</div></div>
+<div class="roadmap"><div class="p y">P3</div><div class="b"><b>WebhooksController + EF Core 8 dispatch table.</b> Idempotent on <code>messageId</code>. Return 200 on parse so Infobip stops retrying.</div></div>
+<div class="roadmap"><div class="p y">P4</div><div class="b"><b><code>IInboundForwarder</code> wiring</b> to the configured downstream consumer (REST / DB / fan-out).</div></div>
+<div class="roadmap"><div class="p b">P5</div><div class="b"><b>Sunset legacy <code>InfoBip</code> plugin.</b> Migrate tenants from <code>ccaas/1</code>/<code>sms/2</code> to <code>messages-api/1</code>; remove after one fallback release.</div></div>
+
+<footer>
+  Companion: <a href="architecture-option-b-split.html">Option B — Admin + HermesWebHooks split (netstandard2.0 bridge)</a> · Last updated 2026-05-20
+</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "default",
+    flowchart: { curve: "basis", htmlLabels: true }
+  });
+</script>
+</body>
+</html>
