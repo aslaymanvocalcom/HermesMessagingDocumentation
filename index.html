@@ -116,14 +116,8 @@
     <p class="meta">For: tenants / end-customers · Onboarding</p>
   </a>
 
-  <a class="card" href="architecture-option-a-single-host.html">
-    <p class="title">Architecture · Option A — Single host (HermesWebHooks net8.0)</p>
-    <p class="desc">Relocate the new Infobip integration into HermesWebHooks as sibling controllers (not plugins). Lower effort, runtime host doubles as management surface. Legacy InfoBip plugin coexists until sunset.</p>
-    <p class="meta">For: senior engineers and architects · Architecture review</p>
-  </a>
-
   <a class="card" href="architecture-option-b-split.html">
-    <p class="title">Architecture · Option B — Admin + HermesWebHooks split (netstandard2.0 bridge)</p>
+    <p class="title">Architecture — Admin + HermesWebHooks split (netstandard2.0 bridge)</p>
     <p class="desc">Provisioning in Admin (net472), runtime in HermesWebHooks (net8.0), shared library targeting .NET Standard 2.0. Cleaner separation along the existing management-plane / data-plane fault line; no HermesWebHooks port required.</p>
     <p class="meta">For: senior engineers and architects · Architecture review</p>
   </a>
