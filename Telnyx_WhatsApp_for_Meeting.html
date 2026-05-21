@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Telnyx WhatsApp — Hermes integration brief</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #ffffff;
+    --ink: #1a1d21;
+    --muted: #5a6470;
+    --soft: #f4f6f8;
+    --line: #e4e8ec;
+    --accent: #00B688;
+    --accent-dark: #008566;
+    --warn: #b46900;
+    --warn-bg: #fff7e6;
+    --q-bg: #f0f7ff;
+    --q-line: #b6d5ec;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.5;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 24px 28px 80px;
+    font-size: 16px;
+  }
+  h1 { font-size: 30px; margin: 4px 0; letter-spacing: -0.01em; }
+  .subtitle { color: var(--muted); margin-bottom: 28px; font-size: 16px; }
+  h2 {
+    margin: 48px 0 12px;
+    font-size: 22px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid var(--accent);
+    color: var(--accent-dark);
+  }
+  h3 { margin: 18px 0 6px; font-size: 17px; }
+  p { margin: 6px 0 12px; }
+  ul { margin: 8px 0 12px; padding-left: 22px; }
+  li { margin: 4px 0; }
+  code {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 14px;
+    background: var(--soft);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: #b03060;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0 18px;
+    font-size: 15px;
+  }
+  th, td {
+    border: 1px solid var(--line);
+    padding: 9px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--soft); font-weight: 600; }
+  tr:nth-child(even) td { background: #fafbfc; }
+  .pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-right: 4px;
+  }
+  .pill.get  { background: #1f7ad3; }
+  .pill.post { background: #00B688; }
+  .pill.patch{ background: #b46900; }
+  .pill.del  { background: #c4444a; }
+  .pill.note { background: #5a6470; }
+  .warn {
+    background: var(--warn-bg);
+    border-left: 4px solid var(--warn);
+    padding: 10px 16px;
+    margin: 12px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .question {
+    background: var(--q-bg);
+    border-left: 4px solid var(--q-line);
+    padding: 8px 16px;
+    margin: 6px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .q-num { font-weight: 700; color: #1f5a8a; margin-right: 6px; }
+  .banner {
+    background: linear-gradient(90deg, #00B688 0%, #008566 100%);
+    color: white;
+    padding: 16px 22px;
+    border-radius: 8px;
+    margin-bottom: 22px;
+  }
+  .banner .small { display: block; margin-top: 4px; font-size: 13px; opacity: 0.9; }
+  .toc {
+    background: var(--soft);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 24px;
+    margin: 18px 0 28px;
+  }
+  .toc h3 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  .toc ol { margin: 0; padding-left: 20px; }
+  .toc a { color: var(--accent-dark); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .diagram-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin: 12px 0 20px;
+    background: white;
+    overflow-x: auto;
+  }
+  .actors { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 12px; }
+  .actor {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+  }
+  .actor.customer { background: #1f5a8a; }
+  .actor.hermes   { background: #00B688; }
+  .actor.telnyx   { background: #6c5ce7; }
+  .actor.meta     { background: #c7457c; }
+  .actor.vocalcom { background: #b46900; }
+  .link-list {
+    columns: 2;
+    column-gap: 28px;
+    font-size: 14.5px;
+  }
+  .link-list li { break-inside: avoid; }
+  .doc-links {
+    background: #fbfdfc;
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 16px;
+    margin: 10px 0;
+    font-size: 14px;
+  }
+  .doc-links strong { color: var(--accent-dark); }
+  .doc-links a { color: var(--accent-dark); }
+  .mermaid { font-size: 14px; }
+  .footnote { color: var(--muted); font-size: 13px; margin-top: 20px; padding-top: 10px; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <strong>Telnyx WhatsApp — Hermes integration brief</strong>
+</div>
+
+<h1>WhatsApp via Telnyx</h1>
+
+<div class="toc">
+  <h3>Agenda</h3>
+  <ol>
+    <li><a href="#hermes">Hermes platform — context</a></li>
+    <li><a href="#concepts">The four Telnyx WhatsApp objects</a></li>
+    <li><a href="#onboarding">Onboard a customer's number</a></li>
+    <li><a href="#templates">Define &amp; manage templates</a></li>
+    <li><a href="#send">Send messages</a></li>
+    <li><a href="#webhooks">Webhooks &amp; status</a></li>
+    <li><a href="#reporting">Reporting &amp; billing per number</a></li>
+    <li><a href="#tenant">Customer-scoped views</a></li>
+    <li><a href="#lifecycle">Master lifecycle diagram</a></li>
+    <li><a href="#endpoints">Endpoint cheat sheet</a></li>
+    <li><a href="#questions">Questions for Telnyx</a></li>
+    <li><a href="#refs">API documentation references</a></li>
+  </ol>
+</div>
+
+<div class="actors">
+  <span class="actor customer">Customer</span>
+  <span class="actor hermes">Hermes</span>
+  <span class="actor telnyx">Telnyx</span>
+  <span class="actor meta">Meta / WhatsApp</span>
+  <span class="actor vocalcom">Vocalcom</span>
+</div>
+
+<h2 id="hermes">1. Hermes platform — context</h2>
+<p>Hermes is a multi-tenant communications platform Vocalcom deploys across several cloud instances. The objects that matter for WhatsApp:</p>
+<ul>
+  <li><strong>Instance</strong> — independent Hermes deployment. We run several in parallel.</li>
+  <li><strong>Customer</strong> — billable tenant living on one instance.</li>
+  <li><strong>Application / use case</strong> — Hermes-platform features (SpeedToLead, Outbound, Inbound, Email, Chat …). Customers subscribe to none, one, or many.</li>
+  <li><strong>Campaign</strong> — owned by a customer, defines the phone numbers it sends from.</li>
+  <li><strong>Number</strong> — MSISDN attached to a campaign.</li>
+</ul>
+
+<h3>Topology</h3>
+<div class="diagram-card">
+<pre class="mermaid">
+flowchart TB
+    classDef plat fill:#d4f1e6,stroke:#008566,color:#1a1d21,font-weight:bold;
+    classDef inst fill:#e2dcf7,stroke:#6c5ce7,color:#1a1d21;
+    classDef cust fill:#dceaf5,stroke:#1f5a8a,color:#1a1d21;
+    classDef app  fill:#fbeacd,stroke:#b46900,color:#1a1d21;
+    classDef camp fill:#fadbe9,stroke:#c7457c,color:#1a1d21;
+    classDef num  fill:#fff,stroke:#5a6470,color:#1a1d21,stroke-dasharray: 3 3;
+
+    HP[Hermes platform]:::plat
+
+    subgraph APPS [Applications / use cases — shared]
+        APP1[SpeedToLead]:::app
+        APP2[Outbound]:::app
+        APP3[Inbound]:::app
+        APP4[Email]:::app
+        APP5[Chat]:::app
+    end
+
+    HP --> APPS
+
+    subgraph I1 [Instance 1]
+        C1A[Customer A]:::cust
+        C1B[Customer B]:::cust
+    end
+    subgraph I2 [Instance 2]
+        C2A[Customer C]:::cust
+    end
+    subgraph I3 [Instance 3]
+        C3A[Customer D]:::cust
+    end
+
+    HP --> I1
+    HP --> I2
+    HP --> I3
+
+    C1A -.subscribes.-> APP1
+    C1A -.subscribes.-> APP3
+    C1B -.subscribes.-> APP1
+    C2A -.subscribes.-> APP2
+    C3A -.subscribes.-> APP1
+    C3A -.subscribes.-> APP4
+
+    subgraph CAMPS_A [Customer A campaigns]
+        CAMP1[Campaign Promo-EU]:::camp
+        CAMP2[Campaign Alerts]:::camp
+    end
+    C1A --> CAMPS_A
+
+    CAMP1 --> N1[+33 1111]:::num
+    CAMP1 --> N2[+33 2222]:::num
+    CAMP2 --> N3[+33 3333]:::num
+</pre>
+</div>
+
+<h3>Billing — four levels</h3>
+<p>The same traffic is rolled up at four nested levels. Vocalcom needs every level.</p>
+<div class="diagram-card">
+<pre class="mermaid">
+flowchart LR
+    classDef l1 fill:#dceaf5,stroke:#1f5a8a,color:#1a1d21,font-weight:bold;
+    classDef l2 fill:#fbeacd,stroke:#b46900,color:#1a1d21,font-weight:bold;
+    classDef l3 fill:#fadbe9,stroke:#c7457c,color:#1a1d21,font-weight:bold;
+    classDef l4 fill:#fff,stroke:#5a6470,color:#1a1d21,font-weight:bold;
+    classDef src fill:#f4f6f8,stroke:#5a6470;
+
+    MSG[(Per-message cost from Telnyx)]:::src
+    N([Number level — by MSISDN]):::l4
+    CMP([Campaign level — by campaign]):::l3
+    APP([Application level — by use case]):::l2
+    CST([Customer level — by tenant]):::l1
+
+    MSG --> N --> CMP --> APP --> CST
+</pre>
+</div>
+
+<h2 id="concepts">2. The four Telnyx WhatsApp objects</h2>
+<table>
+  <thead><tr><th>Object</th><th>Endpoint root</th><th>Role</th></tr></thead>
+  <tbody>
+    <tr><td><strong>WABA</strong></td><td><code>/v2/whatsapp/business_accounts</code></td><td>Meta business identity — one per customer.</td></tr>
+    <tr><td><strong>Phone Number</strong></td><td><code>/v2/whatsapp/phone_numbers</code></td><td>MSISDN registered to a WABA.</td></tr>
+    <tr><td><strong>Messaging Profile</strong></td><td><code>/v2/messaging_profiles</code></td><td>Webhook URL + spend cap + features.</td></tr>
+    <tr><td><strong>Template</strong></td><td><code>/v2/whatsapp/message_templates</code></td><td>Pre-approved Meta template per WABA.</td></tr>
+  </tbody>
+</table>
+<div class="warn">
+  Send call carries only <code>from</code> + <code>to</code> + <code>whatsapp_message</code>. Telnyx resolves WABA and profile from the <code>from</code> number.
+</div>
+
+<h2 id="onboarding">3. Onboard a customer's number</h2>
+<table>
+  <thead><tr><th>Step</th><th>Endpoint</th></tr></thead>
+  <tbody>
+    <tr><td>Create messaging profile (once per use case)</td><td><span class="pill post">POST</span> <code>/v2/messaging_profiles</code></td></tr>
+    <tr><td>Assign number to profile</td><td><span class="pill post">POST</span> <code>/v2/messaging_profiles/{id}/phone_numbers</code></td></tr>
+    <tr><td>Open Embedded Signup widget</td><td><span class="pill note">UI</span> Hermes hosts the widget</td></tr>
+    <tr><td>Customer authorizes Meta Business Manager</td><td><span class="pill note">OAuth</span></td></tr>
+    <tr><td>Track signup state</td><td><span class="pill get">GET</span> <code>/v2/whatsapp/signup/{id}/status</code></td></tr>
+    <tr><td>Signup progress webhook</td><td><span class="pill note">WEBHOOK</span> <code>whatsapp.signup.state_updated</code></td></tr>
+    <tr><td>Confirm WABA</td><td><span class="pill get">GET</span> <code>/v2/whatsapp/business_accounts</code></td></tr>
+    <tr><td>Confirm number verification</td><td><span class="pill get">GET</span> <code>/v2/whatsapp/phone_numbers/{msisdn}</code></td></tr>
+  </tbody>
+</table>
+<div class="warn">
+  Embedded Signup requires a Telnyx-owned number per the docs. Bring-your-own-MSISDN needs Telnyx support. See <strong>Q1</strong>.
+</div>
+
+<h3>Sequence — onboarding</h3>
+<div class="diagram-card">
+<pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Cust as Customer
+    participant H as Hermes
+    participant T as Telnyx
+    participant M as Meta
+    Cust->>H: Connect WhatsApp
+    H->>T: POST /v2/messaging_profiles
+    H->>T: POST /v2/messaging_profiles/{id}/phone_numbers
+    H-->>Cust: Open Embedded Signup
+    Cust->>M: Authorize Business Manager
+    M-->>T: OAuth token
+    T->>M: Create WABA + register number
+    M->>M: Verify (SMS / voice / carrier)
+    M-->>T: Verified
+    T-->>H: Webhook signup.state_updated
+    H->>H: UPSERT CustomerPhoneNumber
+    H-->>Cust: Ready
+</pre>
+</div>
+
+<h2 id="templates">4. Define &amp; manage templates</h2>
+
+<div class="doc-links">
+  <strong>API docs for templates:</strong>
+  <ul>
+    <li>Conceptual guide with full examples — <a href="https://developers.telnyx.com/docs/messaging/whatsapp/manage-templates" target="_blank">developers.telnyx.com/docs/messaging/whatsapp/manage-templates</a></li>
+    <li>Template creation in the WhatsApp quickstart — <a href="https://developers.telnyx.com/docs/messaging/whatsapp/quickstart" target="_blank">developers.telnyx.com/docs/messaging/whatsapp/quickstart</a></li>
+    <li>Using templates in a send call — <a href="https://developers.telnyx.com/docs/messaging/whatsapp/send-messages" target="_blank">developers.telnyx.com/docs/messaging/whatsapp/send-messages</a></li>
+    <li>Help-center: best practices &amp; approval tips — <a href="https://support.telnyx.com/en/articles/13986483" target="_blank">support.telnyx.com/en/articles/13986483</a></li>
+  </ul>
+</div>
+
+<table>
+  <thead><tr><th>Operation</th><th>Endpoint</th></tr></thead>
+  <tbody>
+    <tr><td>Create</td><td><span class="pill post">POST</span> <code>/v2/whatsapp/message_templates</code></td></tr>
+    <tr><td>List</td><td><span class="pill get">GET</span> <code>/v2/whatsapp/message_templates</code></td></tr>
+    <tr><td>Get one</td><td><span class="pill get">GET</span> <code>/v2/whatsapp/message_templates/{id}</code></td></tr>
+    <tr><td>Update (resubmit)</td><td><span class="pill patch">PATCH</span> <code>/v2/whatsapp/message_templates/{id}</code></td></tr>
+    <tr><td>Delete</td><td><span class="pill del">DELETE</span> <code>/v2/whatsapp/message_templates/{id}</code></td></tr>
+  </tbody>
+</table>
+<ul>
+  <li>Categories: <code>AUTHENTICATION</code>, <code>UTILITY</code>, <code>MARKETING</code>.</li>
+  <li>Meta review: 24–48 h.</li>
+  <li>Display name must be approved before submitting templates.</li>
+  <li>Edit rejected templates; do <strong>not</strong> recreate (30-day name reuse block).</li>
+</ul>
+
+<h3>Sequence — template lifecycle</h3>
+<div class="diagram-card">
+<pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Cust as Customer
+    participant H as Hermes
+    participant T as Telnyx
+    participant M as Meta
+    Cust->>H: Submit template
+    H->>T: POST /v2/whatsapp/message_templates
+    T->>M: Submit for review
+    Note over M: 24–48 h
+    M-->>T: status = APPROVED or REJECTED
+    T-->>H: Webhook template.status_updated
+    alt APPROVED
+        H-->>Cust: Ready to send
+    else REJECTED
+        Cust->>H: Edit
+        H->>T: PATCH /v2/whatsapp/message_templates/{id}
+    end
+</pre>
+</div>
+
+<h2 id="send">5. Send messages</h2>
+<p>One endpoint covers every WhatsApp message type. Discriminator: <code>whatsapp_message.type</code>.</p>
+<table>
+  <thead><tr><th>Call</th><th>Endpoint</th></tr></thead>
+  <tbody>
+    <tr><td>Send</td><td><span class="pill post">POST</span> <code>/v2/messages/whatsapp</code></td></tr>
+    <tr><td>Retrieve</td><td><span class="pill get">GET</span> <code>/v2/messages/{id}</code></td></tr>
+  </tbody>
+</table>
+<ul>
+  <li><strong>Inside 24 h window:</strong> <code>text</code>, <code>image</code>, <code>video</code>, <code>document</code>, <code>audio</code>, <code>sticker</code>, <code>location</code>, <code>contacts</code>, <code>interactive</code>, <code>reaction</code>.</li>
+  <li><strong>Outside 24 h window:</strong> approved <code>template</code> only.</li>
+  <li>Idempotency: handled in Hermes (no client-supplied ID on Telnyx).</li>
+  <li>Tracking field: <code>biz_opaque_callback_data</code> is echoed on DLR webhooks.</li>
+</ul>
+
+<h3>Sequence — send + DLR</h3>
+<div class="diagram-card">
+<pre class="mermaid">
+sequenceDiagram
+    autonumber
+    participant App as Hermes app
+    participant H as Hermes API
+    participant DB as Hermes DB
+    participant T as Telnyx
+    participant M as Meta
+    actor R as Recipient
+    App->>H: Send WhatsApp
+    H->>DB: INSERT MessageDispatch (PENDING)
+    H->>T: POST /v2/messages/whatsapp
+    T-->>H: 200 {id: msg_xxx, status: queued}
+    H->>DB: store telnyx_message_id
+    T->>M: Forward to WhatsApp Cloud
+    M->>R: Deliver
+    M-->>T: sent
+    T-->>H: Webhook message.sent
+    M-->>T: delivered
+    T-->>H: Webhook message.delivered
+    M-->>T: finalized (cost, billing_type)
+    T-->>H: Webhook message.finalized
+    H->>DB: UPDATE status, cost, finalized_at
+</pre>
+</div>
+
+<h2 id="webhooks">6. Webhooks &amp; status</h2>
+<p>One URL per messaging profile. Routing to customer happens in Hermes via the <code>from</code> / <code>to</code> number.</p>
+<table>
+  <thead><tr><th>Event</th><th>When</th></tr></thead>
+  <tbody>
+    <tr><td><code>message.sent</code></td><td>Accepted by carrier / Meta</td></tr>
+    <tr><td><code>message.delivered</code></td><td>Delivered to handset</td></tr>
+    <tr><td><code>message.read</code></td><td>Recipient read it (if read receipts on)</td></tr>
+    <tr><td><code>message.finalized</code></td><td>Terminal status + final cost</td></tr>
+    <tr><td><code>message.received</code></td><td>Inbound MO from customer</td></tr>
+    <tr><td><code>whatsapp.signup.state_updated</code></td><td>Embedded Signup progress</td></tr>
+    <tr><td><code>whatsapp.template.status_updated</code></td><td>Template approval / rejection — see <strong>Q4</strong></td></tr>
+  </tbody>
+</table>
+
+<h2 id="reporting">7. Reporting &amp; billing per number</h2>
+<table>
+  <thead><tr><th>Surface</th><th>Endpoint</th><th>Use</th></tr></thead>
+  <tbody>
+    <tr><td>Per-message MDR</td><td><span class="pill get">GET</span> <code>/v2/messages/{id}</code></td><td>Carries cost, profile, status.</td></tr>
+    <tr><td>Detail Records Search</td><td><span class="pill get">GET</span> <code>/v2/detail_records</code></td><td>Per-message rows for any time range.</td></tr>
+    <tr><td>Usage Reports (aggregated)</td><td><span class="pill get">GET</span> <code>/v2/usage_reports?product=messaging</code></td><td>Cost / count / parts; dimensions: direction, carrier, country, status.</td></tr>
+    <tr><td>MDR Usage Reports (async file)</td><td><span class="pill post">POST</span> <code>/v2/reports/mdr_usage_reports</code></td><td>Monthly invoicing batch.</td></tr>
+    <tr><td>Webhook roll-up <span style="font-size:11px;background:#00B688;color:white;padding:1px 6px;border-radius:8px;">recommended</span></td><td><code>message.finalized</code></td><td>Cost stored per row in Hermes — SQL gives any breakdown.</td></tr>
+  </tbody>
+</table>
+<div class="warn">
+  Sending phone number is <strong>not documented as a Usage Reports dimension</strong> for WhatsApp. Per-number cost most likely comes from Hermes SQL over the dispatch table. See <strong>Q6</strong>.
+</div>
+
+<h3>Reporting flow — two audiences</h3>
+<div class="diagram-card">
+<pre class="mermaid">
+flowchart LR
+    classDef h fill:#d4f1e6,stroke:#008566;
+    classDef t fill:#e2dcf7,stroke:#6c5ce7;
+    classDef v fill:#fbeacd,stroke:#b46900;
+    classDef c fill:#dceaf5,stroke:#1f5a8a;
+    classDef s fill:#fff,stroke:#5a6470,stroke-dasharray: 4 4;
+
+    MD[(MessageDispatch)]:::s
+    CPN[(CustomerPhoneNumber)]:::s
+
+    subgraph CUST [Customer — scoped to their numbers]
+        C1[GET /api/Numbers]:::h
+        C2[GET /api/Messages]:::h
+        C3([Customer dashboard]):::c
+    end
+
+    subgraph VOC [Vocalcom — back office]
+        V1[SQL per-number cost]:::v
+        V2[SQL per-customer cost]:::v
+        V3[GET /v2/usage_reports]:::t
+        V4[POST /v2/reports/mdr_usage_reports]:::t
+        V5([Invoicing]):::v
+    end
+
+    MD --> C1
+    CPN --> C1
+    MD --> C2
+    C1 --> C3
+    C2 --> C3
+
+    MD --> V1
+    CPN --> V1
+    MD --> V2
+    CPN --> V2
+    V1 --> V5
+    V2 --> V5
+    V3 -.cross-check.-> V5
+    V4 -.archive.-> V5
+</pre>
+</div>
+
+<h2 id="tenant">8. Customer-scoped views</h2>
+<p>Telnyx API keys are account-wide. Hermes is the gateway — customers never hold a Telnyx key.</p>
+<ul>
+  <li>Customer authenticates to Hermes.</li>
+  <li>Hermes resolves <code>customer_id</code> from session.</li>
+  <li>Hermes queries its own <code>CustomerPhoneNumber</code> + <code>MessageDispatch</code> filtered by <code>customer_id</code>.</li>
+  <li>Customer sees only their numbers, templates, messages.</li>
+</ul>
+
+<h2 id="lifecycle">9. Master lifecycle — one picture</h2>
+<div class="diagram-card">
+<pre class="mermaid">
+flowchart TD
+    classDef c fill:#dceaf5,stroke:#1f5a8a;
+    classDef h fill:#d4f1e6,stroke:#008566;
+    classDef t fill:#e2dcf7,stroke:#6c5ce7;
+    classDef m fill:#fadbe9,stroke:#c7457c;
+    classDef v fill:#fbeacd,stroke:#b46900;
+    classDef s fill:#fff,stroke:#5a6470,stroke-dasharray: 4 4;
+    classDef w fill:#fff7e6,stroke:#b46900;
+
+    S([Customer wants WhatsApp]):::c
+
+    subgraph P1 [1 — Onboarding]
+        A1[Create messaging profile]:::h
+        A2[Assign number]:::h
+        A3[Embedded Signup]:::h
+        A4([Customer authorizes Meta]):::c
+        A5[Telnyx creates WABA]:::t
+        A6[Meta verifies number]:::m
+        A7((signup.state_updated)):::w
+        A8[(CustomerPhoneNumber)]:::s
+    end
+
+    subgraph P2 [2 — Template]
+        B1[Set display name]:::h
+        B2[POST template]:::h
+        B3[Meta review]:::m
+        B4((template.status_updated)):::w
+        B5{Approved?}:::h
+        B6[(Template APPROVED)]:::s
+        B7[Edit + resubmit]:::h
+    end
+
+    subgraph P3 [3 — Send]
+        C1[(Dispatch row inserted)]:::s
+        C2[POST /v2/messages/whatsapp]:::h
+        C3[Telnyx forwards to Meta]:::t
+        C4[Recipient receives]:::m
+    end
+
+    subgraph P4 [4 — Webhooks]
+        D1((message.sent)):::w
+        D2((message.delivered)):::w
+        D3((message.finalized)):::w
+        D4((message.received)):::w
+        D5[(Dispatch row updated)]:::s
+    end
+
+    subgraph P5 [5 — Reporting]
+        E1[Customer view in Hermes]:::h
+        E2[Vocalcom per-number SQL]:::v
+        E3[Usage Reports API]:::t
+        E4([Invoicing]):::v
+    end
+
+    S --> A1 --> A2 --> A3 --> A4 --> A5 --> A6 --> A7 --> A8
+    A8 --> B1 --> B2 --> B3 --> B4 --> B5
+    B5 -- yes --> B6
+    B5 -- no --> B7 --> B2
+    B6 --> C1 --> C2 --> C3 --> C4
+    C4 --> D1 --> D2 --> D3
+    D4 --> D5
+    D3 --> D5
+    D5 --> E1
+    D5 --> E2
+    E2 --> E4
+    E3 -.reconcile.-> E4
+</pre>
+</div>
+
+<h2 id="endpoints">10. Endpoint cheat sheet</h2>
+<div class="diagram-card">
+<pre class="mermaid">
+flowchart LR
+    classDef p fill:#f4f6f8,stroke:#5a6470;
+
+    O((Onboard)) --> E1[POST /v2/messaging_profiles]:::p
+    O --> E2[POST /v2/messaging_profiles/_/phone_numbers]:::p
+    O --> E3[Embedded Signup widget]:::p
+    O --> E4[GET /v2/whatsapp/signup/_/status]:::p
+    O --> E5[GET /v2/whatsapp/business_accounts]:::p
+    O --> E6[GET /v2/whatsapp/phone_numbers]:::p
+
+    TT((Templates)) --> T1[POST /v2/whatsapp/message_templates]:::p
+    TT --> T2[GET /v2/whatsapp/message_templates]:::p
+    TT --> T3[PATCH /v2/whatsapp/message_templates/_]:::p
+    TT --> T4[DELETE /v2/whatsapp/message_templates/_]:::p
+
+    SS((Send)) --> S1[POST /v2/messages/whatsapp]:::p
+    SS --> S2[GET /v2/messages/_]:::p
+
+    WW((Webhooks)) --> W1[message.sent / delivered / finalized / received]:::p
+    WW --> W2[whatsapp.signup.state_updated]:::p
+    WW --> W3[whatsapp.template.status_updated]:::p
+
+    RR((Reporting)) --> R1[GET /v2/usage_reports]:::p
+    RR --> R2[GET /v2/detail_records]:::p
+    RR --> R3[POST /v2/reports/mdr_usage_reports]:::p
+</pre>
+</div>
+
+<h2 id="questions">11. Questions for Telnyx</h2>
+
+<div class="question"><span class="q-num">Q1.</span> Can we register a <strong>customer-owned (non-Telnyx) number</strong> for WhatsApp via API? What's the path?</div>
+<div class="question"><span class="q-num">Q2.</span> What's the recommended model for a multi-tenant BSP like Hermes?</div>
+<div class="question"><span class="q-num">Q3.</span> Can we set a limit per messaging-profile count per account?</div>
+<div class="question"><span class="q-num">Q4.</span> Exact webhook event name for template approval / rejection change?</div>
+<div class="question"><span class="q-num">Q5.</span> Is <strong>sending phone number</strong> or <code>messaging_profile_id</code> available as a Usage Reports dimension for WhatsApp? Critical for per-number invoicing.</div>
+<div class="question"><span class="q-num">Q6.</span> Conversation vs message billing — does the API expose conversation IDs / <code>billing_type</code> per number?</div>
+<div class="question"><span class="q-num">Q7.</span> Webhook signing scheme, retry policy?</div>
+<div class="question"><span class="q-num">Q8.</span> Can API keys be scoped to a WABA or messaging profile?</div>
+<div class="question"><span class="q-num">Q9.</span> Rate limits per WABA / number — Meta tier pass-through or Telnyx-imposed?</div>
+<div class="question"><span class="q-num">Q10.</span> How does Hermes observe Meta's quality rating and messaging tier per number?</div>
+<div class="question"><span class="q-num">Q11.</span> Can the Embedded Signup widget be embedded directly in Hermes UI (iframe / SDK), or portal-only?</div>
+<div class="question"><span class="q-num">Q12.</span> Template &amp; historical-data migration tooling from another BSP?</div>
+<div class="question"><span class="q-num">Q13.</span> Per-number webhook URL override on a shared messaging profile?</div>
+<div class="question"><span class="q-num">Q14.</span> Do you provide billing reports that match our multi-level needs (<strong>customer → application → campaign → number</strong>), or do we build this aggregation on our side? Specifically — can we request a billing report filtered by <code>messaging_profile_id</code>, by labels / tags, or per-number?</div>
+
+<h2 id="refs">12. API documentation references</h2>
+<div class="doc-links">
+  <strong>Templates</strong>
+  <ul class="link-list">
+    <li><a href="https://developers.telnyx.com/docs/messaging/whatsapp/manage-templates" target="_blank">Manage WhatsApp Message Templates</a></li>
+    <li><a href="https://developers.telnyx.com/docs/messaging/whatsapp/quickstart" target="_blank">WhatsApp Quickstart (includes first template)</a></li>
+    <li><a href="https://developers.telnyx.com/docs/messaging/whatsapp/send-messages" target="_blank">Send WhatsApp Messages (using templates)</a></li>
+    <li><a href="https://support.telnyx.com/en/articles/13986483" target="_blank">Template Approval Tips (Help Center)</a></li>
+  </ul>
+</div>
+<div class="doc-links">
+  <strong>Onboarding &amp; WABA</strong>
+  <ul class="link-list">
+    <li><a href="https://developers.telnyx.com/docs/messaging/whatsapp/embedded-signup" target="_blank">WhatsApp Embedded Signup</a></li>
+    <li><a href="https://developers.telnyx.com/docs/messaging/messages/messaging-profiles-overview" target="_blank">Messaging Profiles Overview</a></li>
+    <li><a href="https://developers.telnyx.com/api-reference/whatsapp-business-accounts/list-whatsapp-business-accounts" target="_blank">List WhatsApp Business Accounts (API ref)</a></li>
+  </ul>
+</div>
+<div class="doc-links">
+  <strong>Sending &amp; webhooks</strong>
+  <ul class="link-list">
+    <li><a href="https://developers.telnyx.com/api-reference/whatsapp-messaging/send-a-whatsapp-message" target="_blank">Send a WhatsApp message (API ref)</a></li>
+    <li><a href="https://developers.telnyx.com/docs/messaging/messages/receiving-webhooks" target="_blank">Receiving Webhooks</a></li>
+  </ul>
+</div>
+<div class="doc-links">
+  <strong>Reporting</strong>
+  <ul class="link-list">
+    <li><a href="https://developers.telnyx.com/docs/reporting/usage-reports" target="_blank">Usage Reports</a></li>
+    <li><a href="https://developers.telnyx.com/docs/messaging/messages/message-detail-records" target="_blank">Message Detail Records</a></li>
+  </ul>
+</div>
+
+<div class="footnote">
+  Prepared from public Telnyx developer documentation, 2026-05-21.
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    flowchart: { curve: 'basis', padding: 16, useMaxWidth: true },
+    sequence: { actorMargin: 50, messageFontSize: 13 }
+  });
+</script>
+
+</body>
+</html>

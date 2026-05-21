@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Hermes360 — Infobip Integration Docs</title>
+<title>Hermes360 — Messaging Provider Integration Docs</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
   :root {
@@ -10,10 +10,16 @@
     --ink-soft: #4a4a4a;
     --ink-faint: #6b6b6b;
     --rule: #e3e3e3;
-    --accent: #1f6feb;
-    --accent-soft: #eaf2fd;
     --bg: #fafafa;
     --card-bg: #fff;
+
+    /* Provider colors */
+    --infobip: #ff3d8e;
+    --infobip-soft: #ffe6f0;
+    --infobip-dark: #c41f6a;
+    --telnyx: #00B688;
+    --telnyx-soft: #d4f1e6;
+    --telnyx-dark: #008566;
   }
   * { box-sizing: border-box; }
   body {
@@ -25,7 +31,7 @@
     font-size: 15px;
   }
   .wrap {
-    max-width: 760px;
+    max-width: 860px;
     margin: 0 auto;
     padding: 48px 28px 64px;
   }
@@ -51,21 +57,142 @@
     color: var(--ink-soft);
     font-size: 14.5px;
   }
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--ink-faint);
+    text-decoration: none;
+    margin-bottom: 14px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+  }
+  .back:hover { color: var(--ink); }
+  .back .arrow { font-size: 16px; line-height: 1; }
+
+  /* Provider picker view */
+  .provider-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 8px;
+  }
+  @media (max-width: 640px) {
+    .provider-grid { grid-template-columns: 1fr; }
+  }
+  .provider-card {
+    background: var(--card-bg);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 28px 24px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.05s;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .provider-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 6px;
+  }
+  .provider-card.infobip::before { background: var(--infobip); }
+  .provider-card.telnyx::before  { background: var(--telnyx); }
+  .provider-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  }
+  .provider-card.infobip:hover { border-color: var(--infobip); }
+  .provider-card.telnyx:hover  { border-color: var(--telnyx); }
+
+  .provider-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    border-radius: 12px;
+    color: white;
+    margin-top: 6px;
+    margin-bottom: 12px;
+    align-self: flex-start;
+  }
+  .provider-card.infobip .provider-badge { background: var(--infobip); }
+  .provider-card.telnyx  .provider-badge { background: var(--telnyx); }
+
+  .provider-name {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .provider-desc {
+    margin: 0 0 14px;
+    color: var(--ink-soft);
+    font-size: 14px;
+    flex-grow: 1;
+  }
+  .provider-meta {
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    border-top: 1px dashed var(--rule);
+    padding-top: 10px;
+  }
+  .provider-meta strong { color: var(--ink-soft); }
+
+  /* Docs view */
+  .docs-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .docs-header .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  .docs-header.infobip .dot { background: var(--infobip); }
+  .docs-header.telnyx  .dot { background: var(--telnyx); }
+  .docs-header h2 {
+    font-size: 22px;
+    margin: 0;
+    font-weight: 600;
+  }
+  .docs-subtitle {
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin: 4px 0 22px;
+  }
+
   .cards { display: grid; gap: 14px; }
   .card {
     background: var(--card-bg);
     border: 1px solid var(--rule);
     border-radius: 8px;
     padding: 18px 20px;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.05s;
     text-decoration: none;
     color: inherit;
     display: block;
+    border-left: 4px solid var(--rule);
   }
+  .card.infobip { border-left-color: var(--infobip); }
+  .card.telnyx  { border-left-color: var(--telnyx); }
   .card:hover {
-    border-color: var(--accent);
-    box-shadow: 0 2px 14px rgba(31,111,235,0.08);
+    box-shadow: 0 2px 14px rgba(0,0,0,0.06);
   }
+  .card.infobip:hover { border-color: var(--infobip); }
+  .card.telnyx:hover  { border-color: var(--telnyx); }
   .card:active { transform: translateY(1px); }
   .card .title {
     font-size: 16px;
@@ -83,6 +210,24 @@
     font-size: 12px;
     color: var(--ink-faint);
   }
+  .card .filetype {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: #f0f0f0;
+    color: #555;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* View switching */
+  .view { display: none; }
+  .view.active { display: block; }
+
   footer {
     margin-top: 44px;
     padding-top: 14px;
@@ -90,44 +235,126 @@
     font-size: 12.5px;
     color: var(--ink-faint);
   }
-  footer a { color: var(--ink-faint); }
 </style>
 </head>
 <body>
 <div class="wrap">
 
 <header>
-  <div class="eyebrow">Hermes360 · Infobip Integration Layer</div>
+  <div class="eyebrow">Hermes360 · Messaging Provider Integration Layer</div>
   <h1>Project documentation</h1>
-  <p>HTML reference docs for the Hermes ↔ Infobip integration. Pick a document below.</p>
+  <p>Pick a messaging provider to see the docs we have for that integration.</p>
 </header>
 
-<div class="cards">
+<!-- VIEW 1: Provider picker -->
+<section id="view-picker" class="view active">
+  <div class="provider-grid">
 
-  <a class="card" href="visual-summary.html">
-    <p class="title">Hermes360 ↔ Infobip — Visual Summary</p>
-    <p class="desc">Architectural overview of how Hermes integrates with Infobip: number provisioning via Embedded Signup (Tech Provider Program), controller surface, ER model, and open questions.</p>
-    <p class="meta">For: engineers and architects · Internal reference</p>
-  </a>
+    <a class="provider-card infobip" href="#infobip">
+      <span class="provider-badge">Current</span>
+      <h2 class="provider-name">Infobip</h2>
+      <p class="provider-desc">
+        CPaaS-X integration via Application / Entity / Subscription primitives.
+        Outbound WhatsApp end-to-end verified.
+      </p>
+      <div class="provider-meta">
+        <strong>3 documents</strong> · visual summary, tenant onboarding, architecture
+      </div>
+    </a>
 
-  <a class="card" href="tenant-whatsapp-onboarding-guide.html">
-    <p class="title">Connect a WhatsApp number to Hermes — Tenant guide</p>
-    <p class="desc">Step-by-step guide for tenants onboarding a WhatsApp Business number through Hermes. Covers prerequisites on Meta's side and the in-Hermes flow.</p>
-    <p class="meta">For: tenants / end-customers · Onboarding</p>
-  </a>
+    <a class="provider-card telnyx" href="#telnyx">
+      <span class="provider-badge">Evaluation</span>
+      <h2 class="provider-name">Telnyx</h2>
+      <p class="provider-desc">
+        WhatsApp via WABA + Messaging Profile + Templates. API mapping and meeting-prep
+        brief for the evaluation call.
+      </p>
+      <div class="provider-meta">
+        <strong>1 document</strong> · API map, flow diagrams, open questions
+      </div>
+    </a>
 
-  <a class="card" href="architecture-option-b-split.html">
-    <p class="title">Architecture — Admin + HermesWebHooks split (netstandard2.0 bridge)</p>
-    <p class="desc">Provisioning in Admin (net472), runtime in HermesWebHooks (net8.0), shared library targeting .NET Standard 2.0. Cleaner separation along the existing management-plane / data-plane fault line; no HermesWebHooks port required.</p>
-    <p class="meta">For: senior engineers and architects · Architecture review</p>
-  </a>
+  </div>
+</section>
 
-</div>
+<!-- VIEW 2: Infobip docs -->
+<section id="view-infobip" class="view">
+  <button class="back" onclick="goHome()"><span class="arrow">←</span> Back to providers</button>
+  <div class="docs-header infobip">
+    <span class="dot"></span>
+    <h2>Infobip documentation</h2>
+  </div>
+  <p class="docs-subtitle">Integration via CPaaS-X. Status: outbound verified, numbers slice in progress.</p>
+
+  <div class="cards">
+
+    <a class="card infobip" href="visual-summary.html">
+      <p class="title">Hermes360 ↔ Infobip — Visual Summary <span class="filetype">HTML</span></p>
+      <p class="desc">Architectural overview of how Hermes integrates with Infobip: number provisioning via Embedded Signup (Tech Provider Program), controller surface, ER model, and open questions.</p>
+      <p class="meta">For: engineers and architects · Internal reference</p>
+    </a>
+
+    <a class="card infobip" href="tenant-whatsapp-onboarding-guide.html">
+      <p class="title">Connect a WhatsApp number to Hermes — Tenant guide <span class="filetype">HTML</span></p>
+      <p class="desc">Step-by-step guide for tenants onboarding a WhatsApp Business number through Hermes. Covers prerequisites on Meta's side and the in-Hermes flow.</p>
+      <p class="meta">For: tenants / end-customers · Onboarding</p>
+    </a>
+
+    <a class="card infobip" href="architecture-option-b-split.html">
+      <p class="title">Architecture — Admin + HermesWebHooks split (netstandard2.0 bridge) <span class="filetype">HTML</span></p>
+      <p class="desc">Provisioning in Admin (net472), runtime in HermesWebHooks (net8.0), shared library targeting .NET Standard 2.0. Cleaner separation along the existing management-plane / data-plane fault line; no HermesWebHooks port required.</p>
+      <p class="meta">For: senior engineers and architects · Architecture review</p>
+    </a>
+
+  </div>
+</section>
+
+<!-- VIEW 3: Telnyx docs -->
+<section id="view-telnyx" class="view">
+  <button class="back" onclick="goHome()"><span class="arrow">←</span> Back to providers</button>
+  <div class="docs-header telnyx">
+    <span class="dot"></span>
+    <h2>Telnyx documentation</h2>
+  </div>
+  <p class="docs-subtitle">Evaluation phase. WhatsApp API mapping and meeting-prep brief.</p>
+
+  <div class="cards">
+
+    <a class="card telnyx" href="Telnyx_WhatsApp_for_Meeting.html">
+      <p class="title">Telnyx WhatsApp — Hermes integration brief <span class="filetype">HTML</span></p>
+      <p class="desc">End-to-end API map for WhatsApp on Telnyx: Hermes platform context, the four Telnyx objects, onboarding, templates, sending, webhooks, reporting per number, customer-scoped views, lifecycle diagrams, and 19 questions for the Telnyx meeting.</p>
+      <p class="meta">For: engineers, architects, and meeting prep · Evaluation</p>
+    </a>
+
+  </div>
+</section>
 
 <footer>
-  Last updated 2026-05-20 · Hermes360 — Messaging Provider Integration Layer (Infobip)
+  Last updated 2026-05-21 · Hermes360 — Messaging Provider Integration Layer
 </footer>
 
 </div>
+
+<script>
+  function showView() {
+    const hash = (window.location.hash || '').replace('#', '').toLowerCase();
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    if (hash === 'infobip') {
+      document.getElementById('view-infobip').classList.add('active');
+    } else if (hash === 'telnyx') {
+      document.getElementById('view-telnyx').classList.add('active');
+    } else {
+      document.getElementById('view-picker').classList.add('active');
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+  function goHome() {
+    history.pushState(null, '', window.location.pathname);
+    showView();
+  }
+  window.addEventListener('hashchange', showView);
+  showView();
+</script>
+
 </body>
 </html>
