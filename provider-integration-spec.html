@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Hermes360 — WhatsApp Provider Integration Specification</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #ffffff;
+    --ink: #1a1d21;
+    --muted: #5a6470;
+    --soft: #f4f6f8;
+    --line: #e4e8ec;
+    --accent: #1f5a8a;
+    --accent-dark: #143b5e;
+    --warn: #b46900;
+    --warn-bg: #fff7e6;
+    --ok: #008566;
+    --ok-bg: #e6f7f0;
+    --q-bg: #f0f7ff;
+    --q-line: #b6d5ec;
+    --vocalcom: #b46900;
+    --hermes:  #1f5a8a;
+    --provider:#6c5ce7;
+    --customer:#00B688;
+    --meta:    #c7457c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.55;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 32px 80px;
+    font-size: 16px;
+  }
+  h1 { font-size: 32px; margin: 4px 0; letter-spacing: -0.01em; }
+  .subtitle { color: var(--muted); margin-bottom: 28px; font-size: 16px; }
+  h2 {
+    margin: 52px 0 14px;
+    font-size: 22px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid var(--accent);
+    color: var(--accent-dark);
+  }
+  h3 { margin: 22px 0 6px; font-size: 17px; color: var(--ink); }
+  h4 { margin: 16px 0 4px; font-size: 14.5px; color: var(--accent-dark); text-transform: uppercase; letter-spacing: 0.04em; }
+  p { margin: 6px 0 12px; }
+  ul, ol { margin: 8px 0 14px; padding-left: 22px; }
+  li { margin: 5px 0; }
+  li strong { color: var(--ink); }
+  code {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    background: var(--soft);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: #b03060;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0 18px;
+    font-size: 14.5px;
+  }
+  th, td {
+    border: 1px solid var(--line);
+    padding: 9px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--soft); font-weight: 600; color: var(--accent-dark); }
+  tr:nth-child(even) td { background: #fafbfc; }
+  .banner {
+    background: linear-gradient(135deg, #1f5a8a 0%, #143b5e 100%);
+    color: white;
+    padding: 24px 28px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+  }
+  .banner h1 { color: white; margin: 0 0 6px; }
+  .banner .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.2);
+    margin-bottom: 6px;
+  }
+  .banner p { margin: 8px 0 0; opacity: 0.9; font-size: 15px; }
+  .toc {
+    background: var(--soft);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px 26px;
+    margin: 18px 0 28px;
+  }
+  .toc h3 {
+    margin: 0 0 8px;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+  }
+  .toc ol {
+    margin: 0;
+    padding-left: 22px;
+    columns: 2;
+    column-gap: 32px;
+  }
+  .toc a { color: var(--accent-dark); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .diagram-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px;
+    margin: 14px 0 22px;
+    background: white;
+    overflow-x: auto;
+  }
+  .mermaid { font-size: 14px; }
+  .actors { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 14px; }
+  .actor {
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 14px;
+    color: white;
+    font-weight: 600;
+  }
+  .actor.vocalcom { background: var(--vocalcom); }
+  .actor.hermes   { background: var(--hermes); }
+  .actor.provider { background: var(--provider); }
+  .actor.meta     { background: var(--meta); }
+  .actor.customer { background: var(--customer); }
+  .warn {
+    background: var(--warn-bg);
+    border-left: 4px solid var(--warn);
+    padding: 10px 16px;
+    margin: 14px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 14.5px;
+  }
+  .ok {
+    background: var(--ok-bg);
+    border-left: 4px solid var(--ok);
+    padding: 10px 16px;
+    margin: 14px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 14.5px;
+  }
+  .pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--muted);
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-right: 4px;
+  }
+  .pill.must   { background: #c4444a; }
+  .pill.should { background: #b46900; }
+  .pill.nice   { background: #1f7ad3; }
+  .legend {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin: 8px 0 14px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .legend .item { display: flex; align-items: center; gap: 6px; }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 14px 0;
+  }
+  .col-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 18px;
+  }
+  .col-card h4 { margin-top: 0; }
+  .col-card.we-do   { border-left: 4px solid var(--vocalcom); }
+  .col-card.prov-do { border-left: 4px solid var(--provider); }
+  .footnote {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 32px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  @media (max-width: 720px) {
+    .toc ol { columns: 1; }
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <span class="tag">Provider integration spec</span>
+  <h1>Hermes360 — WhatsApp Messaging</h1>
+  <p>Technical reference for messaging providers integrating with Hermes360. What we are, what we set up on our side, what we need from your platform, and how our customers will use it.</p>
+</div>
+
+<div class="actors">
+  <span class="actor vocalcom">Vocalcom (vendor)</span>
+  <span class="actor hermes">Hermes360 (integration layer)</span>
+  <span class="actor provider">Provider (your platform)</span>
+  <span class="actor meta">Meta / WhatsApp</span>
+  <span class="actor customer">Customer (Hermes tenant)</span>
+</div>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#what">What is Hermes360</a></li>
+    <li><a href="#arch">Platform &amp; architecture</a></li>
+    <li><a href="#mapping">How we map our concepts onto your platform</a></li>
+    <li><a href="#vocalcom-setup">What Vocalcom sets up — one-time per provider</a></li>
+    <li><a href="#onboarding">Customer onboarding — WhatsApp number</a></li>
+    <li><a href="#send">Templates &amp; sending</a></li>
+    <li><a href="#webhooks">Webhooks &amp; status events</a></li>
+    <li><a href="#reporting">Reporting &amp; billing dimensions</a></li>
+    <li><a href="#lifecycle">Master lifecycle — one picture</a></li>
+    <li><a href="#checklist">Capability checklist &amp; open questions</a></li>
+  </ol>
+</div>
+
+<!-- ======================================================= -->
+<h2 id="what">1. What is Hermes360</h2>
+
+<ul>
+  <li><strong>Hermes360</strong> is a multi-tenant communications platform built and operated by Vocalcom.</li>
+  <li>Hermes is <strong>cloud-deployed</strong>: Vocalcom runs <strong>multiple cloud instances</strong> in parallel; each instance hosts a disjoint set of customers.</li>
+  <li>Hermes acts as the <strong>integration layer</strong> between our customers and your messaging platform.</li>
+  <li>Customers never talk to your platform directly &mdash; they interact with Hermes only. Hermes hides provider-specific identifiers, endpoints, and concepts from end customers entirely.</li>
+</ul>
+
+<div class="ok"><strong>From your platform's point of view, Vocalcom is your customer &mdash; one provider account per integration.</strong> End customers do not hold provider credentials, portal access, or identifiers.</div>
+
+<!-- ======================================================= -->
+<h2 id="arch">2. Platform &amp; architecture</h2>
+
+<h3>2.1 Topology &mdash; who lives where</h3>
+
+<div class="diagram-card">
+<pre class="mermaid">
+flowchart TB
+    classDef vendor fill:#fbeacd,stroke:#b46900,color:#1a1d21,font-weight:bold;
+    classDef inst   fill:#dceaf5,stroke:#1f5a8a,color:#1a1d21,font-weight:bold;
+    classDef cust   fill:#d4f1e6,stroke:#008566,color:#1a1d21;
+    classDef app    fill:#e2dcf7,stroke:#6c5ce7,color:#1a1d21;
+    classDef camp   fill:#fadbe9,stroke:#c7457c,color:#1a1d21;
+    classDef num    fill:#fff,stroke:#5a6470,color:#1a1d21,stroke-dasharray: 3 3;
+    classDef prov   fill:#fff3e0,stroke:#b46900,color:#1a1d21,font-weight:bold;
+
+    V[Vocalcom — vendor<br>runs all Hermes instances]:::vendor
+
+    subgraph CLOUD[Hermes cloud — multiple instances in parallel]
+      direction LR
+      I1[Hermes instance 1]:::inst
+      I2[Hermes instance 2]:::inst
+      I3[Hermes instance 3]:::inst
+    end
+
+    V --> CLOUD
+
+    subgraph H1[Customers on instance 1]
+      C1A[Customer A]:::cust
+      C1B[Customer B]:::cust
+    end
+    subgraph H2[Customers on instance 2]
+      C2A[Customer C]:::cust
+    end
+
+    I1 --> H1
+    I2 --> H2
+
+    subgraph USECASES[Use cases — shared product features]
+      U1[Outbound campaigns]:::app
+      U2[Speed-to-lead]:::app
+      U3[Inbound / chat]:::app
+      U4[Notifications]:::app
+    end
+
+    CLOUD --> USECASES
+
+    subgraph CAMPS_A[Customer A — campaigns]
+      CAMP1[Campaign Promo-EU]:::camp
+      CAMP2[Campaign Alerts]:::camp
+    end
+    C1A --> CAMPS_A
+
+    CAMP1 --> N1[+33 1111]:::num
+    CAMP1 --> N2[+33 2222]:::num
+    CAMP2 --> N3[+33 3333]:::num
+
+    P[(Provider account<br>one per integration)]:::prov
+    CLOUD --> P
+</pre>
+</div>
+
+<ul>
+  <li><strong>Vendor</strong> &mdash; Vocalcom; runs Hermes; holds the commercial relationship with the provider.</li>
+  <li><strong>Hermes instance</strong> &mdash; one cloud deployment; several run in parallel.</li>
+  <li><strong>Customer</strong> &mdash; billable tenant on one instance.</li>
+  <li><strong>Use case</strong> &mdash; platform-wide product feature (outbound, speed-to-lead, inbound, notifications). Shared across customers.</li>
+  <li><strong>Campaign</strong> &mdash; owned by a customer; defines the phone numbers it sends from.</li>
+</ul>
+
+<h3>2.2 Runtime architecture &mdash; how the pieces talk</h3>
+
+<div class="diagram-card">
+<pre class="mermaid">
+flowchart LR
+    classDef ui   fill:#e8f5e9,stroke:#008566;
+    classDef api  fill:#dceaf5,stroke:#1f5a8a;
+    classDef wkr  fill:#fbeacd,stroke:#b46900;
+    classDef db   fill:#fff,stroke:#5a6470,stroke-dasharray: 4 4;
+    classDef prov fill:#e2dcf7,stroke:#6c5ce7;
+    classDef meta fill:#fadbe9,stroke:#c7457c;
+    classDef cust fill:#d4f1e6,stroke:#008566;
+
+    subgraph H[Hermes360 instance]
+      direction TB
+      U[Customer UI]:::ui
+      A[Back-office UI]:::ui
+      API[Hermes messaging API]:::api
+      W[Background workers<br>reconcile / sync / refresh]:::wkr
+      DB[(Hermes DB<br>customers · numbers ·<br>templates · dispatch)]:::db
+    end
+
+    C[Customer / Tenant user]:::cust --> U
+    OPS[Vocalcom ops]:::cust --> A
+    U --> API
+    A --> API
+    API --> DB
+    W --> DB
+    W --> API
+
+    P[(Provider platform)]:::prov
+    M[(Meta / WhatsApp)]:::meta
+
+    API -- "REST: send · templates · onboarding handoff" --> P
+    W -- "polling: status refresh / report drain" --> P
+    P -.->|"webhooks: DLR · MO · signup status · template status"| API
+    P --- M
+</pre>
+</div>
+
+<ul>
+  <li><strong>One account, one API key</strong> &mdash; Hermes is the only consumer of your platform.</li>
+  <li><strong>Outbound</strong>: synchronous send + acknowledgement, then asynchronous status events.</li>
+  <li><strong>Status</strong>: webhooks preferred; pull-based fallback (reports endpoint) for any missed event.</li>
+  <li><strong>Onboarding</strong>: Hermes hosts Meta's signup widget in its own UI and hands the resulting WABA back to your platform via a server-side API call.</li>
+</ul>
+
+<!-- ======================================================= -->
+<h2 id="mapping">3. How we map our concepts onto your platform</h2>
+
+<p>Every send must be attributable across orthogonal dimensions. Your platform must accept all of them on the send path and echo them on every status event.</p>
+
+<table>
+  <thead>
+    <tr><th>Hermes concept</th><th>What it represents</th><th>What we need from your platform</th><th>Cardinality</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Use case</strong></td>
+      <td>Outbound, Speed-to-lead, Notifications, Inbound&hellip;</td>
+      <td>A use-case-level container / project / profile we can scope sends to</td>
+      <td>~5&ndash;10 per integration</td>
+    </tr>
+    <tr>
+      <td><strong>Customer</strong></td>
+      <td>Hermes tenant (the billable account)</td>
+      <td>Customer-level scope identifier (sub-account / entity / tag)</td>
+      <td>1 per Hermes customer, created eagerly on customer creation</td>
+    </tr>
+    <tr>
+      <td><strong>Campaign</strong></td>
+      <td>Customer-owned send batch grouping</td>
+      <td>A free-form campaign reference field on every send, echoed on every event</td>
+      <td>1 per campaign</td>
+    </tr>
+    <tr>
+      <td><strong>Channel</strong></td>
+      <td>WHATSAPP today; SMS, RCS, Viber, email later</td>
+      <td>Channel discriminator on the send payload</td>
+      <td>selector</td>
+    </tr>
+    <tr>
+      <td><strong>Send batch</strong></td>
+      <td>One API call that fans out to N recipients</td>
+      <td>Bulk ID returned by send response</td>
+      <td>1 per send call</td>
+    </tr>
+    <tr>
+      <td><strong>Single send (ContactAttempt)</strong></td>
+      <td>One recipient inside a batch</td>
+      <td>Per-recipient message ID, ideally client-supplied for idempotency</td>
+      <td>1 per recipient</td>
+    </tr>
+    <tr>
+      <td><strong>Outbound correlation token</strong></td>
+      <td>Hermes tag echoed on MO replies (matches reply to original send)</td>
+      <td>Free-form field, returned in inbound MOs</td>
+      <td>1 per send</td>
+    </tr>
+    <tr>
+      <td><strong>DLR correlation token</strong></td>
+      <td>Hermes tag echoed on delivery reports</td>
+      <td>Free-form field, returned on DLR webhooks</td>
+      <td>1 per send</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="warn">If your platform does not allow client-supplied message IDs <em>or</em> a stable echo-back field, Hermes cannot guarantee idempotency or reliably match DLRs back to the original send.</div>
+
+<h3>Multi-tenant isolation principles</h3>
+
+<ul>
+  <li>Each Hermes customer is bound to a unique customer-scope identifier on your platform.</li>
+  <li>Phone numbers are <strong>customer-scoped</strong>: a number owned by Customer A cannot be used by Customer B (enforced by Hermes; your platform's tagging supports billing attribution).</li>
+  <li>A single number <strong>can</strong> be shared across multiple campaigns of the <em>same</em> customer.</li>
+  <li>Hermes resolves <code>customer_id</code> from the authenticated session, then queries provider-side resources <em>or</em> its own dispatch table filtered by that ID.</li>
+</ul>
+
+<!-- ======================================================= -->
+<h2 id="vocalcom-setup">4. What Vocalcom sets up — one-time per provider</h2>
+
+<p>Before any customer can onboard a WhatsApp number, Vocalcom does one round of setup on Meta's side and one round of setup against your platform. This is the bridge that lets customers use your platform <strong>without ever knowing it exists</strong>.</p>
+
+<h3>4.1 The pieces and how they connect</h3>
+
+<div class="diagram-card">
+<pre class="mermaid">
+flowchart TB
+    classDef voc  fill:#fbeacd,stroke:#b46900,color:#1a1d21,font-weight:bold;
+    classDef meta fill:#fadbe9,stroke:#c7457c,color:#1a1d21;
+    classDef prov fill:#e2dcf7,stroke:#6c5ce7,color:#1a1d21,font-weight:bold;
+    classDef herm fill:#dceaf5,stroke:#1f5a8a,color:#1a1d21;
+
+    subgraph META[Meta side]
+      BP[Vocalcom Business Portfolio<br>verified business identity]:::meta
+      MA[Vocalcom Meta App<br>app ID · OAuth client]:::meta
+    end
+
+    subgraph PROV[Provider side]
+      PA[Provider account<br>owned by Vocalcom]:::prov
+      SID[Provider solution / config identifier<br>identifies this BSP to Meta]:::prov
+    end
+
+    subgraph VOC[Vocalcom side]
+      VO[Vocalcom legal entity]:::voc
+      HC[Hermes config:<br>App ID + solution ID + API key]:::herm
+    end
+
+    VO -->|creates and verifies| BP
+    VO -->|registers| MA
+    BP -.contains.-> MA
+    VO -->|signs contract| PA
+    PA -->|publishes| SID
+    MA -.linked at signup time to.-> SID
+    MA --> HC
+    SID --> HC
+    PA --> HC
+
+    HC -- "Hermes uses this triple<br>for every customer signup" --> CUSTLINE([per-customer signup])
+</pre>
+</div>
+
+<h3>4.2 The setup steps</h3>
+
+<div class="two-col">
+  <div class="col-card we-do">
+    <h4>What Vocalcom does on Meta</h4>
+    <ol>
+      <li>Create a <strong>Meta Business Portfolio</strong> in Vocalcom's name.</li>
+      <li>Complete <strong>Meta Business Verification</strong> (legal docs, address, web presence).</li>
+      <li>Register a <strong>Meta App</strong> in the Facebook for Developers console under the verified Portfolio.</li>
+      <li>Add the <strong>WhatsApp Business product</strong> to the Meta App.</li>
+      <li>Note the Meta <strong>App ID</strong> &mdash; Hermes passes it to the JS SDK when launching the signup widget.</li>
+    </ol>
+  </div>
+  <div class="col-card prov-do">
+    <h4>What Vocalcom does with your platform</h4>
+    <ol>
+      <li>Sign the provider contract; receive an API key + base URL.</li>
+      <li>Receive your <strong>solution / configuration identifier</strong> &mdash; the value Meta uses to route a WABA to your platform when signup completes.</li>
+      <li>(Coordinate with you, if required) link our Meta App to your solution identifier so signups launched under our App land on your platform.</li>
+      <li>Configure webhook URLs for: delivery reports, inbound messages, signup status, template status.</li>
+      <li>Store all of the above (App ID + solution ID + base URL + API key) in Hermes configuration.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="ok"><strong>Net result.</strong> Hermes holds three things bound together: <code>Vocalcom Meta App ID</code> + <code>your solution identifier</code> + <code>your account API key</code>. Every customer's WhatsApp signup flows under this triple. The customer never sees any of it.</div>
+
+<!-- ======================================================= -->
+<h2 id="onboarding">5. Customer onboarding — WhatsApp number</h2>
+
+<h3>5.1 What the customer must have</h3>
+
+<ul>
+  <li>A <strong>Meta Business Manager</strong> in the customer's company name.</li>
+  <li>A <strong>phone number they own</strong>, capable of receiving SMS or voice. Hermes does <strong>not</strong> procure numbers from your inventory &mdash; customers bring their own MSISDN.</li>
+  <li>The number must <strong>not</strong> be active on the consumer WhatsApp app.</li>
+  <li>Admin rights on their Business Manager.</li>
+  <li>If the number already has a WABA on another provider &mdash; the <strong>two-step verification PIN</strong> for migration.</li>
+</ul>
+
+<h3>5.2 How the customer "uses your platform without knowing it"</h3>
+
+<p>The customer only sees Hermes UI; behind the scenes, three handshakes happen.</p>
+
+<div class="diagram-card">
+<pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Cust as Customer<br>(sees only Hermes)
+    participant H as Hermes UI
+    participant SDK as Meta JS SDK<br>(loaded by Hermes)
+    participant M as Meta
+    participant API as Hermes API
+    participant P as Provider
+
+    rect rgb(232, 245, 233)
+    Note over Cust,SDK: HANDSHAKE 1 — customer authorizes Vocalcom's Meta App
+    Cust->>H: Click "Add WhatsApp number"
+    H->>SDK: Launch signup with<br>(Vocalcom App ID, provider solution ID)
+    SDK->>M: Open Meta dialog
+    Cust->>M: Log in to Meta Business Manager (customer's own)
+    Cust->>M: Authorize "Vocalcom" to manage WhatsApp
+    end
+
+    rect rgb(255, 243, 224)
+    Note over M,SDK: HANDSHAKE 2 — Meta creates the WABA bound to provider's solution
+    Cust->>M: Add and verify phone number
+    M->>M: Create WABA<br>tagged with provider solution ID
+    M-->>SDK: callback: { wabaId, phoneNumberId }
+    SDK-->>H: same callback
+    end
+
+    rect rgb(220, 234, 245)
+    Note over H,P: HANDSHAKE 3 — Hermes hands the WABA off to your platform
+    H->>API: POST /numbers/register<br>{ wabaId, phoneNumberId, customerId }
+    API->>P: Server-side "register WABA" call<br>{ wabaId, customer scope ID }
+    P-->>API: 202 accepted (registration in progress)
+    P->>P: Auto-bind WABA to<br>this customer's scope
+    P-->>API: Webhook: registration FINISHED
+    API-->>Cust: Number ready
+    end
+</pre>
+</div>
+
+<ul>
+  <li><strong>Handshake 1</strong> is the only step the customer interacts with directly. From their point of view they authorize <em>Vocalcom</em> &mdash; not the provider.</li>
+  <li><strong>Handshake 2</strong> happens entirely inside Meta. The provider's solution ID we passed to the SDK is what makes Meta route the resulting WABA to your platform.</li>
+  <li><strong>Handshake 3</strong> is server-to-server between Hermes and your platform; the customer never sees it. Your platform binds the WABA to the customer scope we identify.</li>
+</ul>
+
+<div class="ok"><strong>Customer experience:</strong> "I clicked Add Number, logged into Meta, my number is live." They have no way to tell which provider their messages flow through.</div>
+
+<h3>5.3 Failure modes Hermes surfaces back to the customer</h3>
+
+<div class="warn">
+  <ul style="margin: 0">
+    <li><strong>Number in use on consumer WhatsApp</strong> &mdash; Meta refuses; customer must delete the consumer account.</li>
+    <li><strong>Migration PIN wrong</strong> &mdash; customer must reset PIN at Meta or wait 7 days for automatic recovery.</li>
+    <li><strong>Business verification required</strong> &mdash; customer must complete Meta Business Verification (2&ndash;5 business days).</li>
+  </ul>
+</div>
+
+<h3>5.4 Registration statuses Hermes shows</h3>
+
+<table>
+  <thead><tr><th>Status</th><th>Meaning</th><th>Action</th></tr></thead>
+  <tbody>
+    <tr><td><code>in_progress</code></td><td>Meta + your platform are finalising registration.</td><td>Wait.</td></tr>
+    <tr><td><code>finished</code></td><td>Number registered; ready to send.</td><td>Submit templates / start sending.</td></tr>
+    <tr><td><code>failed</code></td><td>Meta-side error (see failure modes above).</td><td>Resolve and rerun signup.</td></tr>
+  </tbody>
+</table>
+
+<!-- ======================================================= -->
+<h2 id="send">6. Templates &amp; sending</h2>
+
+<p>Two-phase flow: a one-off template registration / approval, then an unlimited number of sends. Free-form text is allowed inside the 24h session window; outside it, only an approved template will send.</p>
+
+<h3>6.1 Template lifecycle</h3>
+
+<div class="diagram-card">
+<pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Cust as Customer
+    participant H as Hermes
+    participant P as Provider
+    participant M as Meta
+    Cust->>H: Submit template (name, language, category, structure)
+    H->>P: POST template
+    P->>M: Submit for review
+    Note over M: Review 24-48 h
+    M-->>P: APPROVED or REJECTED
+    P-->>H: Webhook: template.status_updated
+    alt APPROVED
+        H-->>Cust: Ready to send
+    else REJECTED
+        Cust->>H: Edit template
+        H->>P: PATCH template (within 24h cooldown<br>and 10-edits-per-month gates)
+        H->>P: Resubmit
+    end
+</pre>
+</div>
+
+<ul>
+  <li><strong>Categories</strong>: <code>AUTHENTICATION</code>, <code>UTILITY</code>, <code>MARKETING</code>.</li>
+  <li><strong>Status values</strong> (Meta-controlled): <code>PENDING_APPROVAL</code>, <code>APPROVED</code>, <code>REJECTED</code>, <code>PAUSED</code>, <code>DISABLED</code>.</li>
+  <li><strong>Hard duplicates</strong> &mdash; same <code>(WABA, name, language)</code> &rarr; Hermes short-circuits with a 409 before calling you.</li>
+  <li><strong>Soft duplicates</strong> &mdash; same body / structure under different names &rarr; UI warning, not blocked.</li>
+  <li><strong>Language variants</strong> &mdash; same name + different language &rarr; allowed; one row per variant.</li>
+  <li><strong>Body stored in Hermes DB</strong> for catalog browsing and dedup (templates are not PII).</li>
+</ul>
+
+<h3>6.2 Send + DLR sequence</h3>
+
+<div class="diagram-card">
+<pre class="mermaid">
+sequenceDiagram
+    autonumber
+    participant App as Hermes app code
+    participant API as Hermes API
+    participant DB as Hermes DB<br>(MessageDispatch)
+    participant P as Provider
+    participant M as Meta / WhatsApp
+    actor R as Recipient
+    App->>API: Send WhatsApp (template or text)
+    API->>P: POST /messages (channel, use-case scope,<br>customer scope, campaign ref,<br>sender, content)
+    P-->>API: 200 { bulkId, messageId }
+    API->>DB: INSERT row per messageId (status=PENDING)
+    P->>M: Forward to WhatsApp Cloud
+    M->>R: Deliver
+    M-->>P: sent
+    P-->>API: Webhook message.sent
+    M-->>P: delivered
+    P-->>API: Webhook message.delivered
+    M-->>P: finalized + cost
+    P-->>API: Webhook message.finalized
+    API->>DB: UPDATE status, cost, finalized_at
+    Note over API,P: Pull fallback: GET /reports?bulkId<br>drains missed webhooks
+</pre>
+</div>
+
+<h3>6.3 What Hermes persists per send (per recipient)</h3>
+
+<ul>
+  <li><code>MessageId</code> (provider-supplied, unique) and <code>BulkId</code> (provider-supplied, indexed).</li>
+  <li><code>Destination</code> (recipient MSISDN / WA business id).</li>
+  <li>Use-case scope, customer scope, campaign reference, channel, sender.</li>
+  <li><code>LatestStatusGroupName</code>, <code>LatestStatusName</code>, error code, permanent flag.</li>
+  <li><code>CorrelationData</code>, <code>CallbackData</code> (echoed-back tokens).</li>
+  <li>Retry chain: <code>RetryCount</code>, <code>RetryOfMessageId</code>.</li>
+  <li>Timestamps: <code>SentAt</code>, <code>LastStatusRefreshAt</code>, <code>DeliveredAt</code>, <code>FinalizedAt</code>.</li>
+</ul>
+
+
+<!-- ======================================================= -->
+<h2 id="webhooks">7. Webhooks &amp; status events</h2>
+
+<table>
+  <thead>
+    <tr><th>Event</th><th>When</th><th>Supported</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>message.sent</code></td><td>Accepted by carrier / Meta</td><td>&nbsp;</td></tr>
+    <tr><td><code>message.delivered</code></td><td>Delivered to handset</td><td>&nbsp;</td></tr>
+    <tr><td><code>message.read</code></td><td>Recipient read receipt</td><td>&nbsp;</td></tr>
+    <tr><td><code>message.finalized</code></td><td>Terminal status + final cost / billing category</td><td>&nbsp;</td></tr>
+    <tr><td><code>message.received</code> (MO)</td><td>Inbound from recipient</td><td>&nbsp;</td></tr>
+    <tr><td><code>signup.state_updated</code></td><td>WhatsApp signup IN_PROGRESS / FINISHED / FAILED</td><td>&nbsp;</td></tr>
+    <tr><td><code>template.status_updated</code></td><td>Template APPROVED / REJECTED / PAUSED / DISABLED</td><td>&nbsp;</td></tr>
+    <tr><td><code>number.quality_updated</code></td><td>Meta quality rating change per number</td><td>&nbsp;</td></tr>
+    <tr><td><code>number.tier_updated</code></td><td>Messaging tier change (Meta limits)</td><td>&nbsp;</td></tr>
+  </tbody>
+</table>
+
+<h3>Webhook delivery contract</h3>
+
+<ul>
+  <li>One webhook URL per event family, configured on your side; Hermes supplies the URLs.</li>
+  <li>Every payload must carry the <strong>customer scope</strong>, <strong>use-case scope</strong>, and the original <strong>campaign reference</strong> + correlation tokens we attached on the send.</li>
+  <li><strong>Signed payloads</strong> with HMAC or equivalent; published key-rotation procedure.</li>
+  <li><strong>Documented retry policy</strong>: how many retries, with what backoff, until when.</li>
+  <li><strong>Pull-based fallback</strong>: a reports / MDR endpoint Hermes can poll to drain anything missed at webhook time.</li>
+</ul>
+
+<!-- ======================================================= -->
+<h2 id="reporting">8. Reporting &amp; billing dimensions</h2>
+
+<div class="diagram-card">
+<pre class="mermaid">
+flowchart LR
+    classDef l1 fill:#dceaf5,stroke:#1f5a8a,color:#1a1d21,font-weight:bold;
+    classDef l2 fill:#fbeacd,stroke:#b46900,color:#1a1d21,font-weight:bold;
+    classDef l3 fill:#fadbe9,stroke:#c7457c,color:#1a1d21,font-weight:bold;
+    classDef l4 fill:#fff,stroke:#5a6470,color:#1a1d21,font-weight:bold;
+    classDef src fill:#f4f6f8,stroke:#5a6470;
+
+    MSG[(Per-message cost from provider)]:::src
+    N([Number level — per MSISDN]):::l4
+    CMP([Campaign level]):::l3
+    APP([Use-case level]):::l2
+    CST([Customer level]):::l1
+
+    MSG --> N --> CMP --> APP --> CST
+</pre>
+</div>
+
+<table>
+  <thead><tr><th>Audience</th><th>What they see</th><th>Source</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Customer</strong></td><td>Their own numbers, sends, templates, costs</td><td>Hermes UI &mdash; queries Hermes DB scoped to their customer ID</td></tr>
+    <tr><td><strong>Vocalcom ops</strong></td><td>Cross-customer rollup, per-number cost, invoicing</td><td>Hermes SQL over dispatch table + provider usage reports cross-check</td></tr>
+  </tbody>
+</table>
+
+<div class="warn">If your platform's usage reports do <strong>not</strong> expose per-number / per-customer billing dimensions, Hermes computes them from its own dispatch table &mdash; but we still need per-message cost on the DLR webhook to do so.</div>
+
+<!-- ======================================================= -->
+<h2 id="lifecycle">9. Master lifecycle — one picture</h2>
+
+<div class="diagram-card">
+<pre class="mermaid">
+flowchart TD
+    classDef c fill:#dceaf5,stroke:#1f5a8a;
+    classDef h fill:#d4f1e6,stroke:#008566;
+    classDef p fill:#e2dcf7,stroke:#6c5ce7;
+    classDef m fill:#fadbe9,stroke:#c7457c;
+    classDef v fill:#fbeacd,stroke:#b46900;
+    classDef s fill:#fff,stroke:#5a6470,stroke-dasharray: 4 4;
+    classDef w fill:#fff7e6,stroke:#b46900;
+
+    S([Customer wants WhatsApp]):::c
+
+    subgraph P0[0 — Vocalcom setup, one-time per provider]
+        Z1[Meta Business Portfolio + verification]:::v
+        Z2[Meta App registered]:::v
+        Z3[Provider account + API key + solution ID]:::v
+        Z4[Hermes config: App ID + solution ID + API key]:::h
+    end
+
+    subgraph P1[1 — Customer provisioning]
+        A0[Customer created in Hermes]:::c
+        A1[Hermes creates customer scope<br>on provider]:::h
+        A2[(Customer mapping row)]:::s
+    end
+
+    subgraph P2[2 — Number onboarding]
+        B1[Customer launches signup in Hermes UI]:::c
+        B2[Hermes hosts Meta signup widget]:::h
+        B3[Meta verifies number]:::m
+        B4[Hermes hands WABA to provider]:::h
+        B5[Provider auto-binds number<br>to customer scope]:::p
+        B6((signup.state_updated)):::w
+        B7[(phone_number row)]:::s
+    end
+
+    subgraph P3[3 — Templates]
+        T1[Customer submits template]:::c
+        T2[Hermes forwards to provider]:::h
+        T3[Meta reviews]:::m
+        T4((template.status_updated)):::w
+        T5[(template row)]:::s
+    end
+
+    subgraph P4[4 — Send]
+        D0[(dispatch row PENDING)]:::s
+        D1[Hermes POST message]:::h
+        D2[Provider forwards to Meta]:::p
+        D3[Recipient receives]:::m
+    end
+
+    subgraph P5[5 — Status webhooks]
+        E1((message.sent)):::w
+        E2((message.delivered)):::w
+        E3((message.finalized + cost)):::w
+        E4((message.received MO)):::w
+        E5[(dispatch row updated)]:::s
+    end
+
+    subgraph P6[6 — Reporting]
+        R1[Customer dashboard]:::h
+        R2[Vocalcom ops per-number SQL]:::h
+        R3[Provider usage reports cross-check]:::p
+        R4([Invoicing]):::c
+    end
+
+    S --> Z1 --> Z2 --> Z3 --> Z4 --> A0
+    A0 --> A1 --> A2 --> B1
+    B1 --> B2 --> B3 --> B4 --> B5 --> B6 --> B7
+    B7 --> T1 --> T2 --> T3 --> T4 --> T5
+    T5 --> D0 --> D1 --> D2 --> D3
+    D3 --> E1 --> E2 --> E3 --> E5
+    E4 --> E5
+    E5 --> R1
+    E5 --> R2 --> R4
+    R3 -. reconcile .-> R4
+</pre>
+</div>
+
+<!-- ======================================================= -->
+<h2 id="checklist">10. Capability checklist &amp; open questions</h2>
+
+<h3>10.1 Capability checklist</h3>
+
+<table>
+  <thead>
+    <tr><th>#</th><th>Capability</th><th>Supported</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>Programmatic creation of a customer-level scope (sub-account / entity / label)</td><td>&nbsp;</td></tr>
+    <tr><td>2</td><td>Use-case-level grouping orthogonal to customer scope</td><td>&nbsp;</td></tr>
+    <tr><td>3</td><td>Idempotent / GET-or-create provisioning calls</td><td>&nbsp;</td></tr>
+    <tr><td>4</td><td>Customer-owned MSISDN supported (no procurement from your inventory)</td><td>&nbsp;</td></tr>
+    <tr><td>5</td><td>Meta-Embedded-Signup-based onboarding launchable from Vocalcom's own Meta App, using your solution / configuration identifier</td><td>&nbsp;</td></tr>
+    <tr><td>6</td><td>Server-side API to hand off the captured WABA after signup completes</td><td>&nbsp;</td></tr>
+    <tr><td>7</td><td>Automatic number ↔ customer-scope binding on your side</td><td>&nbsp;</td></tr>
+    <tr><td>8</td><td>Webhook for signup registration status</td><td>&nbsp;</td></tr>
+    <tr><td>9</td><td>Number migration from another provider</td><td>&nbsp;</td></tr>
+    <tr><td>10</td><td>Template CRUD + status read-back</td><td>&nbsp;</td></tr>
+    <tr><td>11</td><td>Webhook for template status changes</td><td>&nbsp;</td></tr>
+    <tr><td>12</td><td>Single send endpoint covering text / media / template / interactive</td><td>&nbsp;</td></tr>
+    <tr><td>13</td><td>Client-supplied message ID or stable echo-back field</td><td>&nbsp;</td></tr>
+    <tr><td>14</td><td>Bulk send with per-recipient IDs</td><td>&nbsp;</td></tr>
+    <tr><td>15</td><td>Use-case scope / customer scope / campaign reference echoed on every event</td><td>&nbsp;</td></tr>
+    <tr><td>16</td><td>DLR webhook with status + error + cost</td><td>&nbsp;</td></tr>
+    <tr><td>17</td><td>Inbound MO webhook with correlation token</td><td>&nbsp;</td></tr>
+    <tr><td>18</td><td>Pull-based reports endpoint for missed webhooks</td><td>&nbsp;</td></tr>
+    <tr><td>19</td><td>Signed webhook payloads + documented retry policy</td><td>&nbsp;</td></tr>
+    <tr><td>20</td><td>Per-customer billing breakdown in usage reports</td><td>&nbsp;</td></tr>
+    <tr><td>21</td><td>Per-number / per-campaign breakdown in usage reports</td><td>&nbsp;</td></tr>
+    <tr><td>22</td><td>Monthly invoice-grade export</td><td>&nbsp;</td></tr>
+    <tr><td>23</td><td>Channel failover (WhatsApp &rarr; SMS) in one send call</td><td>&nbsp;</td></tr>
+    <tr><td>24</td><td>Quality rating &amp; messaging tier visible per number</td><td>&nbsp;</td></tr>
+  </tbody>
+</table>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    flowchart: { curve: 'basis', padding: 16, useMaxWidth: true },
+    sequence: { actorMargin: 60, messageFontSize: 13 }
+  });
+</script>
+
+</body>
+</html>

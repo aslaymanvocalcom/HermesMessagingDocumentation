@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Hermes360 — Infobip Integration Capability Sheet</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --ink: #1a1d21;
+    --muted: #5a6470;
+    --soft: #f4f6f8;
+    --line: #e4e8ec;
+    --accent: #1f5a8a;
+    --accent-dark: #143b5e;
+    --warn: #b46900;
+    --warn-bg: #fff7e6;
+    --ok: #008566;
+    --ok-bg: #e6f7f0;
+    --no: #c4444a;
+    --no-bg: #fdecec;
+    --partial: #b46900;
+    --partial-bg: #fff7e6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.55;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 32px 80px;
+    font-size: 16px;
+  }
+  h1 { font-size: 32px; margin: 4px 0; letter-spacing: -0.01em; }
+  .subtitle { color: var(--muted); margin-bottom: 28px; font-size: 16px; }
+  h2 {
+    margin: 52px 0 14px;
+    font-size: 22px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid var(--accent);
+    color: var(--accent-dark);
+  }
+  h3 { margin: 22px 0 6px; font-size: 17px; color: var(--ink); }
+  h4 { margin: 16px 0 4px; font-size: 14.5px; color: var(--accent-dark); text-transform: uppercase; letter-spacing: 0.04em; }
+  p { margin: 6px 0 12px; }
+  ul, ol { margin: 8px 0 14px; padding-left: 22px; }
+  li { margin: 5px 0; }
+  li strong { color: var(--ink); }
+  code {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    background: var(--soft);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: #b03060;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0 18px;
+    font-size: 14.5px;
+  }
+  th, td {
+    border: 1px solid var(--line);
+    padding: 9px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--soft); font-weight: 600; color: var(--accent-dark); }
+  tr:nth-child(even) td { background: #fafbfc; }
+  .banner {
+    background: linear-gradient(135deg, #c7457c 0%, #8a2f57 100%);
+    color: white;
+    padding: 24px 28px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+  }
+  .banner h1 { color: white; margin: 0 0 6px; }
+  .banner .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.2);
+    margin-bottom: 6px;
+  }
+  .banner p { margin: 8px 0 0; opacity: 0.92; font-size: 15px; }
+  .pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .pill.yes     { background: var(--ok-bg);      color: var(--ok); border: 1px solid var(--ok); }
+  .pill.no      { background: var(--no-bg);      color: var(--no); border: 1px solid var(--no); }
+  .pill.partial { background: var(--partial-bg); color: var(--partial); border: 1px solid var(--partial); }
+  .legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 8px 0 18px;
+    font-size: 13px;
+    color: var(--muted);
+    align-items: center;
+  }
+  .legend .item { display: flex; align-items: center; gap: 6px; }
+  .note-col { color: var(--muted); font-size: 13.5px; }
+  .footnote {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 32px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <span class="tag">Infobip — capability sheet</span>
+  <h1>Hermes360 ↔ Infobip Integration</h1>
+  <p>Capability mapping for sections <strong>7. Webhooks &amp; status events</strong> and <strong>10. Capability checklist &amp; open questions</strong> from the master provider integration spec, scored against Infobip's platform.</p>
+</div>
+
+<div class="legend">
+  <div class="item"><span class="pill yes">Yes</span> Supported by Infobip</div>
+  <div class="item"><span class="pill partial">Partial</span> Supported with caveats</div>
+  <div class="item"><span class="pill no">No</span> Not supported</div>
+  <div class="item">(blank cell = not yet verified — left empty to avoid hallucination)</div>
+</div>
+
+<!-- ======================================================= -->
+<h2 id="webhooks">7. Webhooks &amp; status events</h2>
+
+<table>
+  <thead>
+    <tr><th style="width: 28%">Event</th><th style="width: 30%">When</th><th style="width: 12%">Supported</th><th>Infobip mapping</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>message.sent</code></td>
+      <td>Accepted by carrier / Meta</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td><code>DELIVERY</code> subscription event; intermediate status group with <code>SENT</code>-family status name on the DLR.</td>
+    </tr>
+    <tr>
+      <td><code>message.delivered</code></td>
+      <td>Delivered to handset</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td><code>DELIVERY</code> subscription event; status group <code>DELIVERED</code>, status name <code>DELIVERED_TO_HANDSET</code>.</td>
+    </tr>
+    <tr>
+      <td><code>message.read</code></td>
+      <td>Recipient read receipt</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td><code>SEEN</code> subscription event in the WhatsApp events enum.</td>
+    </tr>
+    <tr>
+      <td><code>message.finalized</code></td>
+      <td>Terminal status + final cost / billing category</td>
+      <td><span class="pill partial">Partial</span></td>
+      <td>Terminal status comes via <code>DELIVERY</code> with <code>price.pricePerMessage</code>; final billing category (WhatsApp conversation category / pricing model) is exposed via the separate <code>BILLING</code> event — two events, not one.</td>
+    </tr>
+    <tr>
+      <td><code>message.received</code> (MO)</td>
+      <td>Inbound from recipient</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td><code>INBOUND_MESSAGE</code> subscription event.</td>
+    </tr>
+    <tr>
+      <td><code>signup.state_updated</code></td>
+      <td>WhatsApp signup IN_PROGRESS / FINISHED / FAILED</td>
+      <td>&nbsp;</td>
+      <td class="note-col">Infobip's Embedded Signup is documented as flowing the WABA registration result back into the account, but I haven't verified the specific webhook event name / payload — left blank.</td>
+    </tr>
+    <tr>
+      <td><code>template.status_updated</code></td>
+      <td>Template APPROVED / REJECTED / PAUSED / DISABLED</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td><code>TEMPLATE_UPDATE</code> subscription event on the WhatsApp channel.</td>
+    </tr>
+    <tr>
+      <td><code>number.quality_updated</code></td>
+      <td>Meta quality rating change per number</td>
+      <td>&nbsp;</td>
+      <td class="note-col">Quality rating is readable via the WhatsApp senders API, but I'm not certain whether Infobip emits a dedicated subscription event for changes — left blank.</td>
+    </tr>
+    <tr>
+      <td><code>number.tier_updated</code></td>
+      <td>Messaging tier change (Meta limits)</td>
+      <td>&nbsp;</td>
+      <td class="note-col">Messaging tier is readable per sender, but I'm not certain whether Infobip pushes a webhook on tier change — left blank.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Webhook delivery contract</h3>
+
+<table>
+  <thead>
+    <tr><th style="width: 38%">Requirement</th><th style="width: 12%">Supported</th><th>Infobip mapping</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>One webhook URL per event family, configurable on Infobip side</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td>Subscriptions API: one <code>profile.webhook.notifyUrl</code> per subscription, scoped to an <code>events[]</code> array (DELIVERY, INBOUND_MESSAGE, SEEN, CLICK, TEMPLATE_UPDATE, BILLING…).</td>
+    </tr>
+    <tr>
+      <td>Customer scope, use-case scope, campaign ref + correlation tokens echoed on every event</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td>Verified end-to-end (2026-05-11): DLR carries <code>platform.entityId</code>, <code>platform.applicationId</code>, <code>campaignReferenceId</code>, plus free-form <code>callbackData</code>.</td>
+    </tr>
+    <tr>
+      <td>Signed payloads (HMAC or equivalent) + key rotation</td>
+      <td>&nbsp;</td>
+      <td class="note-col">I don't want to assert this without checking the current Subscriptions/webhook signing docs — left blank.</td>
+    </tr>
+    <tr>
+      <td>Documented retry policy (count, backoff, expiry)</td>
+      <td>&nbsp;</td>
+      <td class="note-col">Infobip retries failing webhooks but I haven't verified the exact published policy — left blank.</td>
+    </tr>
+    <tr>
+      <td>Pull-based fallback (reports / MDR endpoint)</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td><code>GET /messages-api/1/reports?bulkId=…</code> drains delivery reports independently of the webhook channel.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ======================================================= -->
+<h2 id="checklist">10. Capability checklist &amp; open questions</h2>
+
+<table>
+  <thead>
+    <tr><th style="width: 4%">#</th><th style="width: 42%">Capability</th><th style="width: 12%">Supported</th><th>Infobip mapping</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>Programmatic creation of a customer-level scope (sub-account / entity / label)</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td><strong>Entity</strong> in the Resource Management API — created once per Hermes customer; wire field is <code>entityName</code>.</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Use-case-level grouping orthogonal to customer scope</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td><strong>Application</strong> in the Resource Management API — orthogonal axis to Entity; wire field is <code>applicationName</code>.</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Idempotent / GET-or-create provisioning calls</td>
+      <td><span class="pill no">No</span></td>
+      <td>POST Application / POST Entity are not idempotent on Hermes-supplied keys; safe creation requires list-then-create against the <code>{ results, paging }</code> list shape.</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>Customer-owned MSISDN supported (no procurement from Infobip's inventory)</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td>Embedded Signup binds a customer-owned MSISDN to a WABA inside Infobip; no number lease required.</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>Meta-Embedded-Signup-based onboarding launchable from Vocalcom's own Meta App, using Infobip's solution / configuration identifier</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td>Infobip publishes a <em>configuration ID</em> passed to <code>FB.login</code>; signups launched from Vocalcom's App ID under that configuration land in our Infobip account.</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>Server-side API to hand off the captured WABA after signup completes</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td>Infobip exposes a server-side WABA / sender registration endpoint after Embedded Signup returns <code>wabaId</code> + <code>phoneNumberId</code>.</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>Automatic number ↔ customer-scope binding on Infobip side</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td><strong>Resource Association API</strong> binds the registered sender to the customer's Entity (and the use-case Application).</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>Webhook for signup registration status</td>
+      <td>&nbsp;</td>
+      <td class="note-col">See note on <code>signup.state_updated</code> in §7 — left blank pending verification.</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>Number migration from another provider</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td>Embedded Signup supports the standard Meta migration flow (two-step verification PIN); Infobip surfaces the migration outcome via the signup result.</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>Template CRUD + status read-back</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td>WhatsApp templates v2 — <code>POST /whatsapp/2/senders/{sender}/templates</code>, <code>GET</code> for list/status, and <code>PUT /whatsapp/2/senders/{sender}/templates/{name}</code> for edits (Meta added template edit in 2023; Infobip exposes it).</td>
+    </tr>
+    <tr>
+      <td>11</td>
+      <td>Webhook for template status changes</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td><code>TEMPLATE_UPDATE</code> subscription event.</td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td>Single send endpoint covering text / media / template / interactive</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td>Unified <code>POST /messages-api/1/messages</code> — one endpoint, <code>content.body.type</code> discriminates text / image / document / etc., <code>template</code> as a peer for template sends.</td>
+    </tr>
+    <tr>
+      <td>13</td>
+      <td>Client-supplied message ID or stable echo-back field</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td>Both — client-supplied <code>messageId</code> per recipient, plus <code>callbackData</code> as a free-form echo-back field.</td>
+    </tr>
+    <tr>
+      <td>14</td>
+      <td>Bulk send with per-recipient IDs</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td>Single POST returns a <code>bulkId</code> and a per-recipient <code>messageId</code>; both appear on every subsequent DLR.</td>
+    </tr>
+    <tr>
+      <td>15</td>
+      <td>Use-case scope / customer scope / campaign reference echoed on every event</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td>Verified end-to-end: <code>platform.entityId</code>, <code>platform.applicationId</code>, <code>campaignReferenceId</code> all round-trip on the DLR.</td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td>DLR webhook with status + error + cost</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td><code>DELIVERY</code> webhook carries status group / name, error code + <code>permanent</code> flag, and <code>price.pricePerMessage</code> / currency.</td>
+    </tr>
+    <tr>
+      <td>17</td>
+      <td>Inbound MO webhook with correlation token</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td><code>INBOUND_MESSAGE</code> webhook returns the original send's correlation token so MOs match back to the outbound thread.</td>
+    </tr>
+    <tr>
+      <td>18</td>
+      <td>Pull-based reports endpoint for missed webhooks</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td><code>GET /messages-api/1/reports?bulkId=…</code>.</td>
+    </tr>
+    <tr>
+      <td>19</td>
+      <td>Signed webhook payloads + documented retry policy</td>
+      <td>&nbsp;</td>
+      <td class="note-col">Not asserting without verifying the current published behaviour — left blank.</td>
+    </tr>
+    <tr>
+      <td>20</td>
+      <td>Per-customer billing breakdown in usage reports</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td>Analytics + Exports APIs support <code>entityId</code> as a dimension; per-send price already arrives on the DLR.</td>
+    </tr>
+    <tr>
+      <td>21</td>
+      <td>Per-number / per-campaign breakdown in usage reports</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td>Sender (MSISDN) and <code>campaignReferenceId</code> are both available dimensions on the Analytics / Exports APIs.</td>
+    </tr>
+    <tr>
+      <td>22</td>
+      <td>Monthly invoice-grade export</td>
+      <td>&nbsp;</td>
+      <td class="note-col">Infobip issues monthly invoices via its commercial channel, but I don't want to assert the exact invoice-export API shape without verifying — left blank.</td>
+    </tr>
+    <tr>
+      <td>23</td>
+      <td>Channel failover (WhatsApp → SMS) in one send call</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td>Unified Messages API supports multi-channel messages with a configured failover order on the same request.</td>
+    </tr>
+    <tr>
+      <td>24</td>
+      <td>Quality rating &amp; messaging tier visible per number</td>
+      <td><span class="pill yes">Yes</span></td>
+      <td>Both fields are exposed per sender via the WhatsApp senders API (read side); see §7 for the open question on change webhooks.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p class="footnote">Cells marked blank are intentionally unfilled rather than guessed: they correspond to capabilities for which I don't have a confidently verified Infobip-side mapping. They should be confirmed against the live Infobip docs / a probe against <code>xr5e2e.api.infobip.com</code> before being asserted in the master spec.</p>
+
+</body>
+</html>
